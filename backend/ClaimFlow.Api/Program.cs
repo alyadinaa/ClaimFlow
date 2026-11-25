@@ -4,6 +4,7 @@ using ClaimFlow.Api.Infrastructure;
 using ClaimFlow.Api.Modules.Auth;
 using ClaimFlow.Api.Modules.Auth.Entities;
 using ClaimFlow.Api.Modules.Claims;
+using ClaimFlow.Api.Modules.Dashboard;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -51,6 +52,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ClaimService>();
+builder.Services.AddScoped<DashboardService>();
 
 // HTTP: enums are exchanged as names. The second call makes OpenAPI describe them the same way.
 builder.Services.AddControllers().AddJsonOptions(options =>

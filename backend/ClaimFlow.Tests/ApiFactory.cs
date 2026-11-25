@@ -50,12 +50,12 @@ public sealed class ApiFactory(string environment = "Development", string? jwtKe
         return action(scope.ServiceProvider.GetRequiredService<ClaimFlowDbContext>());
     }
 
-    public void AddUser(string email, string password, UserRole role)
+    public void AddUser(string email, string password, UserRole role, string displayName = "Test User")
     {
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClaimFlowDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
-        db.Users.Add(new User(email, email, hasher.HashPassword(null!, password), role));
+        db.Users.Add(new User(email, displayName, hasher.HashPassword(null!, password), role));
         db.SaveChanges();
     }
 

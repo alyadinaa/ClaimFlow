@@ -22,6 +22,9 @@ public static class MarketCatalog
             ? info
             : throw new ClaimRuleException(ClaimRuleError.Validation, "Market is not supported.");
 
+    public static int DecimalPlacesFor(string currencyCode) =>
+        Markets.Values.First(m => m.CurrencyCode == currencyCode).DecimalPlaces;
+
     public static DateOnly LocalDate(Market market, DateTimeOffset instant)
     {
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById(Get(market).TimeZoneId);
