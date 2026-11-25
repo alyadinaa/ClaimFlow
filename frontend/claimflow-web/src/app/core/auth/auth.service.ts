@@ -55,6 +55,12 @@ export class AuthService {
     return this.current()?.role ?? null;
   }
 
+  // Used only to recognise the user's own claims on screen.
+  userId(): number | null {
+    const token = this.token();
+    return token ? readUserId(token) : null;
+  }
+
   homeUrl(): string {
     const role = this.role();
     return role ? HOME[role] : '/login';
@@ -73,6 +79,17 @@ export class AuthService {
 
 function isCurrent(session: LoginResponse): boolean {
   return Date.parse(session.expiresAtUtc) > Date.now();
+}
+
+// The login response has no user id, but the token's payload does (the 'sub' claim).
+function readUserId(token: string): number | null {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const id = Number((JSON.parse(atob(payload)) as { sub?: string }).sub);
+    return Number.isInteger(id) ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 function readSession(): LoginResponse | null {

@@ -12,7 +12,7 @@ import { StatusBadge } from '../../shared/status-badge';
   selector: 'app-my-claims',
   imports: [DatePipe, RouterLink, StatusBadge],
   templateUrl: './my-claims.html',
-  styleUrl: './my-claims.css',
+  styleUrl: '../../shared/claim-table.css',
 })
 export class MyClaims implements OnInit {
   private readonly claimsApi = inject(ClaimantClaimsService);

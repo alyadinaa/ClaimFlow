@@ -42,7 +42,7 @@ interface ClaimView {
   selector: 'app-claim-details',
   imports: [DatePipe, RouterLink, StatusBadge, InformationResponseForm],
   templateUrl: './claim-details.html',
-  styleUrl: './claim-details.css',
+  styleUrl: '../../shared/claim-details.css',
 })
 export class ClaimDetails implements OnInit {
   private readonly claimsApi = inject(ClaimantClaimsService);

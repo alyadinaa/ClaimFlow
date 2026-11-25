@@ -113,6 +113,8 @@ describe('route protection', () => {
     TestBed.resetTestingModule();
     await open(target, 'ClaimsOfficer');
     expect(url()).toBe('/officer/dashboard');
+    api.expectOne('/api/officer/dashboard');
+    api.expectOne('/api/officer/dashboard/exposure');
   });
 });
 

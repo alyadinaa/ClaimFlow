@@ -1,0 +1,81 @@
+<div class="page-heading">
+  <h1>Dashboard</h1>
+  <button type="button" class="button secondary" (click)="load()">Refresh</button>
+</div>
+
+@if (errors().length > 0) {
+  <div class="alert" role="alert">
+    @for (message of errors(); track message) {
+      <p>{{ message }}</p>
+    }
+  </div>
+} @else {
+  @if (data(); as current) {
+    <dl class="cards">
+      @for (card of cards(); track card.label) {
+        <div class="card">
+          <dt>{{ card.label }}</dt>
+          <dd>{{ card.value }}</dd>
+        </div>
+      }
+    </dl>
+
+    <h2>Team workload and performance</h2>
+    @if (current.dashboard.officers.length === 0) {
+      <p class="card">There are no claims officers yet.</p>
+    } @else {
+      <table class="card">
+        <thead>
+          <tr>
+            <th scope="col">Officer</th>
+            <th scope="col">Open assigned</th>
+            <th scope="col">Awaiting information</th>
+            <th scope="col">Decided</th>
+            <th scope="col">Average time to decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (officer of current.dashboard.officers; track officer.officerId) {
+            <tr>
+              <td data-label="Officer">{{ officer.officerName }}{{ officer.officerId === userId ? ' (you)' : '' }}</td>
+              <td data-label="Open assigned">{{ officer.openAssigned }}</td>
+              <td data-label="Awaiting information">{{ officer.awaitingInformation }}</td>
+              <td data-label="Decided">{{ officer.decided }}</td>
+              <td data-label="Average time to decision">{{ average(officer.averageSecondsToDecision) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="note">From submission to decision, including time waiting for the claimant.</p>
+    }
+
+    <h2>Outstanding liability exposure</h2>
+    @if (current.exposure.length === 0) {
+      <p class="card">There are no open claims.</p>
+    } @else {
+      <table class="card">
+        <thead>
+          <tr>
+            <th scope="col">Currency</th>
+            <th scope="col">Open claims</th>
+            <th scope="col">Exposure</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of current.exposure; track row.currencyCode) {
+            <tr>
+              <td data-label="Currency">{{ row.currencyCode }}</td>
+              <td data-label="Open claims">{{ row.openClaims }}</td>
+              <td data-label="Exposure">{{ exposure(row) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="note">
+        Open claims at the assessed amount, or the claimed amount if not yet assessed. Currencies are not added together.
+      </p>
+    }
+  } @else {
+    <p class="card" role="status">Loading the dashboard…</p>
+  }
+}

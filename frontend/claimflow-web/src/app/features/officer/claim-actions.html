@@ -1,0 +1,70 @@
+<div class="choices">
+  @for (form of forms(); track form) {
+    <button
+      type="button"
+      class="button"
+      [class.secondary]="open() !== form"
+      [attr.aria-expanded]="open() === form"
+      [disabled]="busy()"
+      (click)="show(open() === form ? null : form)"
+    >
+      {{ labels[form].open }}
+    </button>
+  }
+</div>
+
+@if (claim().status === 'AwaitingInformation') {
+  <p class="hint">Waiting for the claimant's answer. Until then, the claim can only be rejected.</p>
+} @else if (claim().assessedAmountMinor === null) {
+  <p class="hint">Record an assessment before settling.</p>
+}
+
+<!-- The open form disappears if the claim's new status no longer allows it. -->
+@if (open(); as form) {
+  @if (forms().includes(form)) {
+    <form (submit)="submit($event)" novalidate>
+      <label for="action-input">
+        {{ labels[form].field }}{{ form === 'assessment' ? ' (' + claim().currencyCode + ')' : '' }}
+      </label>
+      @if (form === 'assessment') {
+        <input
+          id="action-input"
+          inputmode="decimal"
+          autocomplete="off"
+          [value]="text()"
+          [readOnly]="busy()"
+          [attr.aria-invalid]="!!error()"
+          [attr.aria-describedby]="error() ? 'action-error' : null"
+          (input)="text.set($any($event.target).value)"
+        />
+      } @else {
+        <textarea
+          id="action-input"
+          rows="4"
+          [value]="text()"
+          [readOnly]="busy() || confirming()"
+          [attr.aria-invalid]="!!error()"
+          [attr.aria-describedby]="error() ? 'action-error' : null"
+          (input)="text.set($any($event.target).value)"
+        ></textarea>
+      }
+      @if (error()) {
+        <p class="field-error" id="action-error">{{ error() }}</p>
+      }
+
+      @if (confirming()) {
+        <div class="confirm" role="alertdialog" aria-labelledby="confirm-text">
+          <p id="confirm-text"><strong>{{ confirmation() }}</strong> This cannot be undone.</p>
+          <button type="button" id="confirm" class="button" [disabled]="busy()" (click)="confirm()">
+            {{ busy() ? 'Saving…' : form === 'settle' ? 'Yes, settle' : 'Yes, reject' }}
+          </button>
+          <button type="button" class="button secondary" [disabled]="busy()" (click)="confirming.set(false)">Back</button>
+        </div>
+      } @else {
+        <button type="submit" class="button" [disabled]="busy()">
+          {{ busy() ? 'Saving…' : labels[form].submit }}
+        </button>
+      }
+    </form>
+  }
+}

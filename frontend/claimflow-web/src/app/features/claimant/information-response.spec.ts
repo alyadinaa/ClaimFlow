@@ -176,6 +176,10 @@ describe('information request display', () => {
   it.each([null, 'ClaimsOfficer'])('is only for claimants (role %s)', async (role) => {
     await open(role);
     expect(TestBed.inject(Router).url).toBe(role ? '/officer/dashboard' : '/login');
+    // Only the officer's own dashboard may be requested.
+    expect(api.match(() => true).map((r) => r.request.url)).toEqual(
+      role ? ['/api/officer/dashboard', '/api/officer/dashboard/exposure'] : [],
+    );
   });
 });
 

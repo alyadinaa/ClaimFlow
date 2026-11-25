@@ -1,0 +1,139 @@
+@if (notFound()) {
+  <div class="card">
+    <h1>Claim not found</h1>
+    <p>This claim does not exist.</p>
+  </div>
+} @else if (errors().length > 0) {
+  <div class="alert" role="alert">
+    @for (text of errors(); track text) {
+      <p>{{ text }}</p>
+    }
+    <button type="button" class="button secondary" (click)="load()">Try again</button>
+  </div>
+} @else {
+  @if (view(); as current) {
+    @let claim = current.claim;
+
+    <div class="page-heading">
+      <h1>{{ reference(claim.id) }}</h1>
+      <app-status-badge [status]="claim.status" />
+    </div>
+
+    @if (message(); as text) {
+      <p class="success" role="status">{{ text }}</p>
+    }
+    @if (actionErrors().length > 0) {
+      <div class="alert" role="alert">
+        @for (text of actionErrors(); track text) {
+          <p>{{ text }}</p>
+        }
+        @if (locked()) {
+          <button type="button" class="button secondary" (click)="load()">Reload claim</button>
+        }
+      </div>
+    }
+
+    <section class="card requests">
+      <h2>Actions</h2>
+      @if (locked()) {
+        <p>Reload the claim to continue.</p>
+      } @else if (claim.status === 'Submitted') {
+        <p>This claim is not assigned.</p>
+        <button type="button" class="button" [disabled]="busy()" (click)="act({ path: 'pickup' })">
+          {{ busy() ? 'Saving…' : 'Pick up claim' }}
+        </button>
+      } @else if (!isOpen()) {
+        <p>This claim has been decided and cannot be changed.</p>
+      } @else if (!isMine()) {
+        <p>This claim is assigned to {{ claim.assignedOfficerName }}. You can view it, but not change it.</p>
+      } @else {
+        <app-claim-actions [claim]="claim" [busy]="busy()" [completed]="completed()" (act)="act($event)" />
+      }
+    </section>
+
+    <div class="columns">
+      <section class="card">
+        <h2>Claim information</h2>
+        <dl>
+          <dt>Claimant</dt>
+          <dd>{{ claim.claimantName }}</dd>
+          <dt>Assigned to</dt>
+          <dd>{{ claim.assignedOfficerName ?? 'Not assigned' }}{{ isMine() ? ' (you)' : '' }}</dd>
+          <dt>Type</dt>
+          <dd>{{ claim.type }}</dd>
+          <dt>Market</dt>
+          <dd>{{ market(claim.market) }}</dd>
+          <dt>Incident date</dt>
+          <dd>{{ claim.incidentDate | date: 'd MMM y' }}</dd>
+          @if (claim.vehicleRegistration) {
+            <dt>Vehicle registration</dt>
+            <dd>{{ claim.vehicleRegistration }}</dd>
+          }
+          @if (claim.propertyAddress) {
+            <dt>Property address</dt>
+            <dd>{{ claim.propertyAddress }}</dd>
+          }
+          <dt>Amount claimed</dt>
+          <dd>{{ money(claim, claim.claimedAmountMinor) }}</dd>
+          <dt>Assessed amount</dt>
+          <dd>{{ claim.assessedAmountMinor === null ? 'Not assessed' : money(claim, claim.assessedAmountMinor) }}</dd>
+          @if (claim.settlementAmountMinor !== null) {
+            <dt>Settlement amount</dt>
+            <dd><strong>{{ money(claim, claim.settlementAmountMinor) }}</strong></dd>
+          }
+          @if (claim.rejectionReason) {
+            <dt>Rejection reason</dt>
+            <dd class="text">{{ claim.rejectionReason }}</dd>
+          }
+          <dt>Submitted</dt>
+          <dd>{{ claim.submittedAtUtc | date: 'd MMM y, HH:mm' }}</dd>
+          @if (claim.decidedAtUtc) {
+            <dt>Decided</dt>
+            <dd>{{ claim.decidedAtUtc | date: 'd MMM y, HH:mm' }}</dd>
+          }
+          <dt>Description</dt>
+          <dd class="text">{{ claim.description }}</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>History</h2>
+        <ol>
+          @for (entry of current.history; track entry.id) {
+            <li>
+              <strong>{{ actions[entry.action] }}</strong>
+              <span class="muted">{{ entry.occurredAtUtc | date: 'd MMM y, HH:mm' }}, {{ entry.actorName }}</span>
+              @if (entry.amountMinor !== null) {
+                <span>Amount: {{ money(claim, entry.amountMinor) }}</span>
+              }
+              @if (entry.note) {
+                <span class="text">{{ entry.note }}</span>
+              }
+            </li>
+          }
+        </ol>
+      </section>
+    </div>
+
+    @if (claim.informationRequests.length > 0) {
+      <section class="card answers">
+        <h2>Information requests</h2>
+        @for (request of claim.informationRequests; track request.id) {
+          <article [class.open]="request.status === 'Open'">
+            <p class="request-status">{{ requestStatuses[request.status] }}</p>
+            <p class="text"><strong>{{ request.question }}</strong></p>
+            <p class="muted">Asked {{ request.requestedAtUtc | date: 'd MMM y, HH:mm' }}</p>
+            @if (request.response) {
+              <p class="text">Answer: {{ request.response }}</p>
+            }
+            @if (request.respondedAtUtc) {
+              <p class="muted">Answered {{ request.respondedAtUtc | date: 'd MMM y, HH:mm' }}</p>
+            }
+          </article>
+        }
+      </section>
+    }
+  } @else {
+    <p class="card" role="status">Loading the claim…</p>
+  }
+}

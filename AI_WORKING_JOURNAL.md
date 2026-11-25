@@ -1296,3 +1296,70 @@ This phase addresses the incomplete requirement recorded in Entry 14. The develo
 - Text only, and an answer cannot be edited after sending.
 - If a first attempt is still travelling when the check reports "not saved", both could be sent. The version check lets only one be saved.
 - A 403 on page load shows both a banner and a page error.
+
+---
+
+## Entry 16: Claims officer screens (Phase 10D)
+
+- **Date:** 2026-11-25
+- **Task:** Officer dashboard, claim lists, claim details and claim actions
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Purpose and process
+
+The developer asked for the officer experience using the actual backend contract, prioritising "functional, demonstrable workflows over visual polish" because remaining time was limited. The AI reported the endpoints, DTOs and expectedVersion rules before coding. No backend file or package was changed.
+
+### Assessment requirements and developer decisions
+
+- **Assessment (p.2):** claims staff pick up incoming claims, review and assess them, progress them to settlement or rejection, and see their team's workload and performance. Each of these activities now has a screen.
+- **Developer decisions:** metric definitions (Entry 11), lifecycle rules (Entry 3), confirmation before settling and rejecting, and no chart library. Page structure and error handling are AI implementation choices within the request.
+
+### API contract used
+
+| Endpoint (under `/api/officer`) | Body besides `expectedVersion` | Response |
+|---|---|---|
+| `GET /dashboard` | – | `DashboardResponse` |
+| `GET /dashboard/exposure` | – | `CurrencyExposure[]` |
+| `GET /claims`, `GET /claims/{id}` | – | `OfficerClaimResponse` (list or one) |
+| `GET /claims/{id}/history` | – | `OfficerHistoryResponse[]` |
+| `POST /claims/{id}/pickup` | none | `OfficerClaimResponse` |
+| `POST /claims/{id}/assessment` | `amountMinor` (no notes field) | `OfficerClaimResponse` |
+| `POST /claims/{id}/information-requests` | `question` | `OfficerClaimResponse` |
+| `POST /claims/{id}/settle` | `note` (optional) | `OfficerClaimResponse` |
+| `POST /claims/{id}/reject` | `reason` | `OfficerClaimResponse` |
+
+### Implementation
+
+- **Dashboard:** total, unassigned, open, awaiting-information and decided claims, the officer's own open claims, and workload and average time to decision per officer.
+- **Exposure:** one row per currency, with no total across currencies.
+- **Lists:** Incoming Claims (submitted, with pickup) and My Assigned Claims (the officer's own, including decided claims).
+- **Details:** claim information, assignment, assessed and settlement amounts, requests and answers, and full history.
+- **Actions:** pickup, assessment and reassessment, information request, settlement, and rejection from InReview or AwaitingInformation. Only actions allowed for the claim's status and assignment are offered. Amounts are entered in the claim's currency.
+- **Officer identification:** the login response has no user ID, so the app reads the JWT `sub` claim to recognise the officer's own claims. This is for display only; the API enforces access.
+- **Versions:** every action sends the version last loaded and then refreshes the claim and history. On 409 the claim is reloaded and an open confirmation is cancelled, so settlement must be confirmed again at the current amount.
+- **Confirmation:** settling and rejecting need confirmation. The settlement confirmation shows the amount.
+- **Uncertain results (no reply or 5xx):** details-page actions reload the claim and are never repeated automatically. If reloading fails, actions are locked. Pickup from the list shows the error and refreshes the list.
+
+### Tests and verification
+
+- Angular production build: no errors.
+- **118 frontend unit tests passed** (37 new). **129 backend tests passed**; the backend is unchanged.
+- **Officer browser check: 33 of 33 passed** with the real API and a temporary database. It covered settlement, rejection from both statuses, repeated clicks saving one pickup and one assessment, a stale settlement refused and reconfirmed at the new amount, dashboard figures, phone widths, and the claimant seeing only the settlement.
+- **Claimant browser checks rerun:** 24 of 24 (Phase 10B) and 21 of 21 (Phase 10C) passed, because two stylesheets were moved to a shared folder.
+- No uncaught browser errors. The scripts are temporary and are not in the repository.
+- **Initial failure:** 39 unit tests failed at first. Officer redirect tests now reach a dashboard that calls the API, so their "no unexpected requests" check failed and broke later tests. The AI updated two tests to expect those requests; no application code changed.
+
+### Decisions
+
+- **Accepted:** The developer accepted Phase 10D for finalisation and commit, subject to a clean review.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Known limitations
+
+- No automatic refresh, paging, sorting or filtering.
+- One demo officer, so "assigned to another officer" was checked by unit and API tests, not in the browser.
+- Officers can open any claim by address, but no screen lists other officers' claims.
+- Unsent text is lost when leaving the page.
+- The confirmation moves focus to its button but does not trap focus.
+- Kafka is not implemented. The README has not been updated for the Angular application.

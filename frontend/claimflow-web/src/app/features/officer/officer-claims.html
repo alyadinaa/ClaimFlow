@@ -1,0 +1,80 @@
+<div class="page-heading">
+  <h1>{{ incoming() ? 'Incoming Claims' : 'My Assigned Claims' }}</h1>
+  <button type="button" class="button secondary" (click)="load()">Refresh</button>
+</div>
+
+@if (message(); as done) {
+  <p class="success" role="status">
+    {{ done.text }} <a [routerLink]="['/officer/claims', done.id]">Open claim</a>
+  </p>
+}
+@if (actionErrors().length > 0) {
+  <div class="alert" role="alert">
+    @for (text of actionErrors(); track text) {
+      <p>{{ text }}</p>
+    }
+  </div>
+}
+
+@if (errors().length > 0) {
+  <div class="alert" role="alert">
+    @for (text of errors(); track text) {
+      <p>{{ text }}</p>
+    }
+  </div>
+} @else {
+  @if (claims(); as rows) {
+    @if (rows.length === 0) {
+      <p class="card">
+        {{ incoming() ? 'There are no claims waiting to be picked up.' : 'You have no assigned claims.' }}
+      </p>
+    } @else {
+      <table class="card">
+        <thead>
+          <tr>
+            <th scope="col">Reference</th>
+            <th scope="col">Claimant</th>
+            <th scope="col">Type</th>
+            <th scope="col">Market</th>
+            <th scope="col">Claimed</th>
+            <th scope="col">Submitted</th>
+            <th scope="col">Status</th>
+            @if (incoming()) {
+              <th scope="col">Action</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (claim of rows; track claim.id) {
+            <tr>
+              <td data-label="Reference">
+                <a [routerLink]="['/officer/claims', claim.id]">{{ reference(claim.id) }}</a>
+              </td>
+              <td data-label="Claimant">{{ claim.claimantName }}</td>
+              <td data-label="Type">{{ claim.type }}</td>
+              <td data-label="Market">{{ market(claim.market) }}</td>
+              <td data-label="Claimed">{{ money(claim) }}</td>
+              <td data-label="Submitted">{{ claim.submittedAtUtc | date: 'd MMM y, HH:mm' }}</td>
+              <td data-label="Status"><app-status-badge [status]="claim.status" /></td>
+              @if (incoming()) {
+                <td data-label="Action">
+                  <button
+                    type="button"
+                    class="button"
+                    [disabled]="busy()"
+                    [attr.aria-label]="'Pick up ' + reference(claim.id)"
+                    (click)="pickUp(claim)"
+                  >
+                    Pick up
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else {
+    <p class="card" role="status">Loading claims…</p>
+  }
+}
