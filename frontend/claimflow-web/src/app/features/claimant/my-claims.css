@@ -1,0 +1,71 @@
+table {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th,
+td {
+  padding: 0.8rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+th {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+td a {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.empty {
+  text-align: center;
+}
+
+.alert p {
+  margin: 0 0 0.75rem;
+}
+
+/* On small screens each claim becomes a block with labelled rows. */
+@media (max-width: 760px) {
+  thead {
+    display: none;
+  }
+
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+  }
+
+  tr {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:last-child {
+    border-bottom: 0;
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    border: 0;
+  }
+
+  td::before {
+    content: attr(data-label);
+    color: var(--muted);
+  }
+}

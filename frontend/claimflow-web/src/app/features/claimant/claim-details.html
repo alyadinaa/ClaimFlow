@@ -1,0 +1,109 @@
+<p><a class="back" routerLink="/claimant/claims">← My Claims</a></p>
+
+@if (notFound()) {
+  <div class="card">
+    <h1>Claim not found</h1>
+    <p>This claim does not exist or is not one of yours.</p>
+  </div>
+} @else if (errors().length > 0) {
+  <div class="alert" role="alert">
+    @for (message of errors(); track message) {
+      <p>{{ message }}</p>
+    }
+    <button type="button" class="button secondary" (click)="load()">Try again</button>
+  </div>
+} @else {
+  @if (view(); as current) {
+    @let claim = current.claim;
+
+    @if (submittedReference) {
+      <p class="success" role="status">Your claim {{ submittedReference }} has been submitted.</p>
+    }
+
+    <div class="page-heading">
+      <h1>{{ reference(claim.id) }}</h1>
+      <app-status-badge [status]="claim.status" />
+    </div>
+
+    @if (claim.status === 'Settled' && claim.settlementAmountMinor !== null) {
+      <p class="success">
+        Your claim was settled for <strong>{{ money(claim, claim.settlementAmountMinor) }}</strong>.
+      </p>
+    }
+    @if (claim.rejectionReason) {
+      <p class="alert"><strong>Your claim was rejected.</strong> Reason: {{ claim.rejectionReason }}</p>
+    }
+
+    <div class="columns">
+      <section class="card">
+        <h2>Claim information</h2>
+        <dl>
+          <dt>Type</dt>
+          <dd>{{ claim.type }}</dd>
+          <dt>Market</dt>
+          <dd>{{ market(claim.market) }}</dd>
+          <dt>Incident date</dt>
+          <dd>{{ claim.incidentDate | date: 'd MMM y' }}</dd>
+          @if (claim.vehicleRegistration) {
+            <dt>Vehicle registration</dt>
+            <dd>{{ claim.vehicleRegistration }}</dd>
+          }
+          @if (claim.propertyAddress) {
+            <dt>Property address</dt>
+            <dd>{{ claim.propertyAddress }}</dd>
+          }
+          <dt>Amount claimed</dt>
+          <dd>{{ money(claim, claim.claimedAmountMinor) }}</dd>
+          <dt>Submitted</dt>
+          <dd>{{ claim.submittedAtUtc | date: 'd MMM y, HH:mm' }}</dd>
+          @if (claim.decidedAtUtc) {
+            <dt>Decided</dt>
+            <dd>{{ claim.decidedAtUtc | date: 'd MMM y, HH:mm' }}</dd>
+          }
+          <dt>What happened</dt>
+          <dd class="text">{{ claim.description }}</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>History</h2>
+        <ol>
+          @for (entry of current.history; track $index) {
+            <li>
+              <strong>{{ actionLabel(entry.action) }}</strong>
+              <span class="muted">
+                {{ entry.occurredAtUtc | date: 'd MMM y, HH:mm' }},
+                {{ entry.actorRole === 'Claimant' ? 'by you' : 'by a claims officer' }}
+              </span>
+              @if (entry.amountMinor !== null) {
+                <span>Amount: {{ money(claim, entry.amountMinor) }}</span>
+              }
+              @if (entry.note) {
+                <span class="text">{{ entry.note }}</span>
+              }
+            </li>
+          }
+        </ol>
+      </section>
+    </div>
+
+    @if (claim.informationRequests.length > 0) {
+      <section class="card requests">
+        <h2>Information requests</h2>
+        @for (request of claim.informationRequests; track request.id) {
+          <article>
+            <p class="text"><strong>{{ request.question }}</strong></p>
+            <p class="muted">
+              {{ requestStatuses[request.status] }}, asked {{ request.requestedAtUtc | date: 'd MMM y, HH:mm' }}
+            </p>
+            @if (request.response) {
+              <p class="text">Your answer: {{ request.response }}</p>
+            }
+          </article>
+        }
+      </section>
+    }
+  } @else {
+    <p class="card" role="status">Loading your claim…</p>
+  }
+}

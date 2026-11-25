@@ -1,0 +1,129 @@
+<h1>Submit a claim</h1>
+
+<form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (errors().length > 0) {
+    <div class="alert" role="alert">
+      <p>Your claim was not submitted.</p>
+      <ul>
+        @for (message of errors(); track message) {
+          <li>{{ message }}</li>
+        }
+      </ul>
+    </div>
+  }
+
+  <fieldset>
+    <legend>Claim type</legend>
+    <label class="choice"><input type="radio" formControlName="type" value="Motor" /> Motor</label>
+    <label class="choice"><input type="radio" formControlName="type" value="Property" /> Property</label>
+  </fieldset>
+
+  @let marketError = error('market');
+  <div class="field">
+    <label for="market">Market</label>
+    <select
+      id="market"
+      formControlName="market"
+      [attr.aria-invalid]="!!marketError"
+      [attr.aria-describedby]="marketError ? 'market-error' : null"
+    >
+      <option value="" disabled>Choose a market</option>
+      @for (option of markets; track option.value) {
+        <option [value]="option.value">{{ option.label }} ({{ option.currencyCode }})</option>
+      }
+    </select>
+    @if (marketError) {
+      <p class="field-error" id="market-error">{{ marketError }}</p>
+    }
+  </div>
+
+  @let dateError = error('incidentDate');
+  <div class="field">
+    <label for="incidentDate">Incident date</label>
+    <input
+      id="incidentDate"
+      type="date"
+      formControlName="incidentDate"
+      [attr.max]="latestDate()"
+      [attr.aria-invalid]="!!dateError"
+      [attr.aria-describedby]="dateError ? 'incidentDate-error' : null"
+    />
+    @if (dateError) {
+      <p class="field-error" id="incidentDate-error">{{ dateError }}</p>
+    }
+  </div>
+
+  @if (type() === 'Motor') {
+    @let vehicleError = error('vehicleRegistration');
+    <div class="field">
+      <label for="vehicleRegistration">Vehicle registration</label>
+      <input
+        id="vehicleRegistration"
+        formControlName="vehicleRegistration"
+        autocomplete="off"
+        [attr.aria-invalid]="!!vehicleError"
+        [attr.aria-describedby]="vehicleError ? 'vehicleRegistration-error' : null"
+      />
+      @if (vehicleError) {
+        <p class="field-error" id="vehicleRegistration-error">{{ vehicleError }}</p>
+      }
+    </div>
+  } @else {
+    @let addressError = error('propertyAddress');
+    <div class="field">
+      <label for="propertyAddress">Property address</label>
+      <input
+        id="propertyAddress"
+        formControlName="propertyAddress"
+        autocomplete="street-address"
+        [attr.aria-invalid]="!!addressError"
+        [attr.aria-describedby]="addressError ? 'propertyAddress-error' : null"
+      />
+      @if (addressError) {
+        <p class="field-error" id="propertyAddress-error">{{ addressError }}</p>
+      }
+    </div>
+  }
+
+  @let descriptionError = error('description');
+  <div class="field">
+    <label for="description">What happened?</label>
+    <textarea
+      id="description"
+      rows="5"
+      formControlName="description"
+      [attr.aria-invalid]="!!descriptionError"
+      [attr.aria-describedby]="descriptionError ? 'description-error' : 'description-hint'"
+    ></textarea>
+    @if (descriptionError) {
+      <p class="field-error" id="description-error">{{ descriptionError }}</p>
+    } @else {
+      <p class="hint" id="description-hint">Up to {{ maxDescription }} characters.</p>
+    }
+  </div>
+
+  @let amountError = error('claimedAmount');
+  <div class="field">
+    <label for="claimedAmount">Amount claimed{{ market() ? ' (' + market()!.currencyCode + ')' : '' }}</label>
+    <input
+      id="claimedAmount"
+      formControlName="claimedAmount"
+      inputmode="decimal"
+      autocomplete="off"
+      [attr.aria-invalid]="!!amountError"
+      [attr.aria-describedby]="amountError ? 'claimedAmount-error' : 'claimedAmount-hint'"
+    />
+    @if (amountError) {
+      <p class="field-error" id="claimedAmount-error">{{ amountError }}</p>
+    } @else {
+      <p class="hint" id="claimedAmount-hint">The currency depends on the market.</p>
+    }
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="button" [disabled]="loading()">
+      {{ loading() ? 'Submitting…' : 'Submit claim' }}
+    </button>
+    <a class="button secondary" routerLink="/claimant/claims">Cancel</a>
+  </div>
+</form>

@@ -1173,3 +1173,64 @@ Tested from a clean temporary clone, which was then deleted:
 ### Status
 
 The working tree was clean after the commit. The README has not yet been updated for the Angular application.
+
+---
+
+## Entry 14: Claimant claim screens (Phase 10B)
+
+- **Date:** 2026-11-25
+- **Task:** My Claims, claim submission and claim details for claimants
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Purpose and scope
+
+The developer asked for a claimant to view their own claims, submit Motor and Property claims, and see a claim's details, status and history, using the actual API contract and without changing the backend. The AI reported the endpoints, DTOs, required fields and backend limitations before coding. Officer screens were excluded.
+
+**This phase does not complete the claimant journey. A claimant cannot yet answer information requests through the UI.** Questions are shown, but there is no reply form. This is a known incomplete requirement, to be addressed in Phase 10C.
+
+### Assessment requirements and developer decisions
+
+- **Assessment (p.2):** claimants report an incident, track their claim, provide additional information when asked and receive decisions.
+- **Covered in the UI:** reporting, tracking and receiving decisions. **Not yet covered in the UI:** providing additional information.
+- **Developer decisions and AI implementation choices:** page design, validation messages, reference format and formatting rules.
+
+### Implementation
+
+| Part | Content |
+|---|---|
+| Pages | `my-claims`, `submit-claim`, `claim-details` |
+| Service | `ClaimantClaimsService`: all claim API calls |
+| Models | `claim.models.ts`: claimant request and response models matching the backend DTOs |
+| Helpers | `claim-format.ts` (reference and money), `markets.ts`, `api-error.ts` |
+| Shared | `status-badge.ts`; small phone layout fix to the page shell |
+| Endpoints used | `GET /api/claims`, `POST /api/claims`, `GET /api/claims/{id}`, `GET /api/claims/{id}/history` |
+
+- **Motor and Property:** only the fields for the chosen type are shown, validated and sent. Limits match the backend, which checks every rule again. File uploads are not offered.
+- **Submission:** the form accepts one request at a time. API errors are shown without losing the form; server error details are not shown.
+- **Money:** the currency follows the market. Text is converted to minor units without floating-point arithmetic. JPY accepts no decimals.
+- **Incident date:** checked against today's date in the market's time zone, as the API does.
+- **History and visibility:** history is shown oldest first. The models contain no assessment or officer identity fields, and the page shows only known claimant events.
+- **Accessibility:** labelled fields, linked error messages, focus moved to the first invalid field, and statuses shown as text as well as colour.
+
+### Tests and verification
+
+- Angular production build: no errors.
+- **58 frontend unit tests passed** (38 new). **129 backend tests passed**; the backend is unchanged. No package was added.
+- **Browser check: 24 of 24 passed** in headless Chrome with the development server, proxy, real API and a temporary database, with no uncaught errors. It was rerun after the phone layout fix with the same result. It is a temporary script and is not in the repository.
+- It covered Motor and Property submission, three rapid submits creating one claim, questions, settlement and rejection reasons, no assessment or officer name before or after settlement, HTML shown as plain text, phone widths, and a rejected token returning the user to login. The last point closes the browser-level 401 gap in Entry 12.
+
+### Decisions
+
+- **Accepted:** The developer accepted Phase 10B for finalisation and commit, subject to a clean review.
+- **Directed by the developer:** tidy the phone header, where the log out button wrapped to a second line.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Limitations and trade-offs
+
+- No UI for answering information requests (above).
+- If the connection fails after the server saves a claim, resubmitting could create a duplicate. The API cannot recognise a repeat.
+- Market settings are copied from the backend, which has no market endpoint. A later backend change would not be detected.
+- No automatic refresh or paging.
+- Timestamps are shown in the viewer's time zone.
+- The 403 message has not been tested through the browser interface.

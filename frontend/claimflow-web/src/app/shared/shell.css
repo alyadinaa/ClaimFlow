@@ -81,6 +81,19 @@ main {
   padding-bottom: 3rem;
 }
 
+/* On phones the name moves below, so the log out button stays on the first row. */
+@media (max-width: 560px) {
+  .bar button {
+    margin-left: auto;
+  }
+
+  .user {
+    order: 1;
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
 .notice {
   display: flex;
   justify-content: space-between;

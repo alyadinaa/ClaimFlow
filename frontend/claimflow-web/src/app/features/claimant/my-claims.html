@@ -1,0 +1,51 @@
+<div class="page-heading">
+  <h1>My Claims</h1>
+  <a class="button" routerLink="/claimant/submit">Submit a claim</a>
+</div>
+
+@if (errors().length > 0) {
+  <div class="alert" role="alert">
+    @for (message of errors(); track message) {
+      <p>{{ message }}</p>
+    }
+    <button type="button" class="button secondary" (click)="load()">Try again</button>
+  </div>
+} @else {
+  @if (claims(); as list) {
+    @if (list.length === 0) {
+      <div class="card empty">
+        <h2>No claims yet</h2>
+        <p>When you submit a claim, you can follow its progress here.</p>
+      </div>
+    } @else {
+      <table class="card">
+        <thead>
+          <tr>
+            <th scope="col">Reference</th>
+            <th scope="col">Type</th>
+            <th scope="col">Market</th>
+            <th scope="col">Incident date</th>
+            <th scope="col">Submitted</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (claim of list; track claim.id) {
+            <tr>
+              <td data-label="Reference">
+                <a [routerLink]="['/claimant/claims', claim.id]">{{ reference(claim.id) }}</a>
+              </td>
+              <td data-label="Type">{{ claim.type }}</td>
+              <td data-label="Market">{{ market(claim.market) }}</td>
+              <td data-label="Incident date">{{ claim.incidentDate | date: 'd MMM y' }}</td>
+              <td data-label="Submitted">{{ claim.submittedAtUtc | date: 'd MMM y, HH:mm' }}</td>
+              <td data-label="Status"><app-status-badge [status]="claim.status" /></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else {
+    <p class="card" role="status">Loading your claims…</p>
+  }
+}
