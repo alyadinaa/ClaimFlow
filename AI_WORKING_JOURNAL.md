@@ -844,3 +844,83 @@ The developer limited this phase to the migration and persistence tests, require
 - **Accepted:** The migration, integration tests and `.gitignore` change.
 - **Challenged:** None.
 - **Overridden:** None.
+
+---
+
+## Entry 9: HTTP API and authentication (Phase 7A)
+
+- **Date:** 2026-11-25
+- **Task:** Minimal HTTP API and demo authentication, as one working vertical slice
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Request and process
+
+The developer specified the endpoints, authentication, startup behaviour and tests, and asked the AI to preserve the domain rules and the existing 77 tests. The AI left the domain entities and migration unchanged and identified one conflict with an earlier decision (see "Developer decisions", item 1).
+
+### Assessment requirements and developer decisions
+
+- **Assessment (p.2):** names the claimant and staff activities and lists REST/HTTP under preferred technology. It does not mention authentication or prescribe any endpoint, token format or visibility rule.
+- **Developer decisions:** JWT, roles, endpoints, visibility rules and startup behaviour described below.
+
+### Implemented endpoints
+
+| Endpoint | Role | Behaviour |
+|---|---|---|
+| `POST /api/auth/login` | Anyone | Same error for an unknown email and a wrong password |
+| `POST /api/claims` | Claimant | Submit a claim |
+| `GET /api/claims` | Claimant | Own claims only |
+| `GET /api/claims/{id}` | Claimant | Own claim only; otherwise 404 |
+| `GET /api/claims/{id}/history` | Claimant | Own claim only; assessment events left out |
+| `GET /api/officer/claims` | ClaimsOfficer | Submitted claims and claims assigned to this officer |
+| `GET /api/officer/claims/{id}` | ClaimsOfficer | Any claim |
+| `GET /api/officer/claims/{id}/history` | ClaimsOfficer | Any claim |
+| `POST /api/officer/claims/{id}/pickup` | ClaimsOfficer | Requires the expected version; 409 if stale or already taken |
+
+### Authentication and startup
+
+- Passwords are hashed with ASP.NET Core's `PasswordHasher`.
+- One-hour JWT containing user ID (`sub`) and `role`. Issuer, audience, signature, algorithm and expiry are validated.
+- Every endpoint requires a token by default, except login and the Development-only OpenAPI document.
+- The signing key and demo passwords exist only in `appsettings.Development.json`, labelled development-only.
+- In Development only: migrations are applied, then two demo users are seeded, skipping any that exist.
+- Claim changes and history are saved with one `SaveChanges` call. Domain errors and stale updates map to 400, 401, 403, 404 and 409.
+
+### Packages added
+
+| Package | Version | Project |
+|---|---|---|
+| `Microsoft.AspNetCore.Authentication.JwtBearer` | 10.0.15 | ClaimFlow.Api |
+| `Microsoft.AspNetCore.Mvc.Testing` | 10.0.15 | ClaimFlow.Tests |
+
+### Results
+
+- Build: 0 warnings and 0 errors.
+- **101 tests passed, 0 failed** (77 existing and 24 new API tests).
+- Vulnerability check found no known vulnerable packages.
+- **Real HTTP check:** the API ran against a temporary file database outside the project folder. Login, submission and pickup worked, a stale pickup returned 409 and a request without a token returned 401. A second startup with existing data also worked. The temporary database was then deleted.
+
+**Security tests**
+- **Forged role:** a token with only its role changed is rejected. The AI's first version of this test was too weak, because the forged token had no expiry and would have been rejected anyway. The AI found and corrected this.
+- **Hidden assessment data:** Claimant responses contain no assessment data and no officer names or IDs. The officer's role may appear in history. The automated visibility test currently covers a claim in review. The code also applies the no-assessment-visibility rule after settlement, but that specific scenario has not yet been independently tested.
+- **Unauthenticated access:** every claim endpoint returns 401 without a token and 403 with the wrong role.
+- **Production startup:** does not migrate or seed, and fails without its own signing key.
+
+### Developer decisions
+
+1. **Assessment visibility:** claimants never see internal assessments or `AssessedAmount`, including after settlement. They see `SettlementAmount` when settled. This replaces the Entry 3 rule, which hid assessments only until settlement. The AI raised the conflict and implemented the stricter rule; the developer approved it.
+2. **Database location:** keep the default location usable for reviewers, and use the environment override for local development outside OneDrive.
+3. **Officer access:** officers can view any claim, but can only act on claims assigned to them, except picking up an unassigned claim.
+
+**Developer decision: Phase 7A review approved**
+
+- **Accepted:** The implementation, tests, packages and the three decisions above.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Remaining limitations
+
+- T3–T8 endpoints are not implemented.
+- No dashboard or exposure API.
+- No login rate limiting or token revocation.
+- CORS is not configured yet.
+- Truly parallel pickup is not tested.
