@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ClaimFlow.Api/ClaimFlow.Api.csproj" />
+  <Project Path="ClaimFlow.Tests/ClaimFlow.Tests.csproj" />
+</Solution>
