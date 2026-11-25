@@ -924,3 +924,64 @@ The developer specified the endpoints, authentication, startup behaviour and tes
 - No login rate limiting or token revocation.
 - CORS is not configured yet.
 - Truly parallel pickup is not tested.
+
+---
+
+## Entry 10: Complete claim lifecycle HTTP API (Phase 7B)
+
+- **Date:** 2026-11-25
+- **Task:** Add the remaining lifecycle endpoints (T3–T8) and tests
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Request and process
+
+The developer asked for the remaining endpoints using the existing domain methods, without duplicating lifecycle rules or changing the domain model or migration, and to "Prioritize correctness and security over adding extra features." The domain model and migration were not changed and no packages were added.
+
+### Assessment requirements and developer decisions
+
+- **Assessment (p.2):** staff review and assess claims and progress them to settlement or rejection; claimants provide additional information when asked and receive decisions.
+- **Developer decisions:** the endpoint paths, version checks, visibility rules and status codes. The assessment does not prescribe these. The AI chose the paths to match the existing `pickup` endpoint.
+
+### Endpoints added
+
+| Endpoint | Role | Transition |
+|---|---|---|
+| `POST /api/officer/claims/{id}/assessment` | Assigned officer | T3 |
+| `POST /api/officer/claims/{id}/information-requests` | Assigned officer | T4 |
+| `POST /api/claims/{id}/information` | Claim owner | T5 |
+| `POST /api/officer/claims/{id}/settle` | Assigned officer | T6 |
+| `POST /api/officer/claims/{id}/reject` | Assigned officer | T7, T8 |
+
+### Implementation
+
+- Every existing-claim action, including pickup, uses one shared `ClaimService` method: load the claim, call the domain method, save once.
+- Information requests are always loaded with the claim, so they are available for T5 and T8.
+- Every existing-claim action requires `expectedVersion` and returns the updated version. Stale versions return 409.
+- Question, response, reason and amount are checked by the domain, not by request validation, so that the approved error order is kept.
+
+### Tests and results
+
+- Build: 0 warnings and 0 errors.
+- **119 tests passed, 0 failed** (101 existing and 18 new).
+- **Lifecycle:** success cases, assignment and ownership, invalid input, rejection from InReview and AwaitingInformation, T8 closure and history, stale versions, and error order for requests wrong in several ways.
+- **Settled-claim visibility:** the claimant sees `SettlementAmount` but no `AssessedAmount` or assessment history. The test uses an earlier assessment (54,321) that differs from the settlement amount (80,000), so that equal amounts cannot hide a leak. This closes the gap recorded in Entry 9.
+- **Persistence:** two stale information requests for the same claim were tested one after the other. The second fails as a concurrency conflict and saves nothing.
+
+### Developer decisions
+
+1. **Information requests in claimant responses:** these include questions, answers and status, but not officer names or IDs. The AI added this because a claimant cannot answer a question they cannot see; the developer approved it.
+2. **Structural validation:** A missing or malformed `expectedVersion` returns 400 before assignment and ownership checks. Authentication (401) and role authorisation (403) still occur before the request body is processed. Permission-first ordering applies after structural validation. The AI reported this exception to the Entry 7 order; the developer approved it.
+
+**Developer decision: Phase 7B approved**
+
+- **Accepted:** The implementation, tests and the two decisions above.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Remaining limitations
+
+- No dashboard or exposure API.
+- Truly parallel requests are untested.
+- No new file-database verification in this phase.
+- CORS, login rate limiting and token revocation remain unimplemented.
+- The README has not been created yet.
