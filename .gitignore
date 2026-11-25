@@ -1,0 +1,69 @@
+# Assessment document (confidential, must not be committed)
+Young Grad Programme THA (Nov 2026).docx
+# Word temporary lock files
+~$*
+
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+[Pp]ublish/
+*.binlog
+
+# .NET test results and coverage
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+coverage*.cobertura.xml
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+coverage/
+npm-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+*.pfx
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider
+.idea/
+
+# VS Code (shared launch/task configuration may be committed)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
