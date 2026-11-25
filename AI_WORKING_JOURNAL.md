@@ -14,7 +14,7 @@ A running log of what was asked of the AI, and what the developer accepted, chal
 
 ```text
 I am working on a technical take-home assessment
-for the Chubb APAC Young Graduate Program
+for the [company] APAC Young Graduate Program
 (Full-stack Developer).
 
 I have placed the original assessment PDF in
@@ -106,7 +106,7 @@ Pages refer to the Word document's saved page breaks. **[E]** = explicit in the 
 - **Dashboard and management:** team workload and performance are explicit [E, p.2]. Officer workload needs and liability exposure are posed as questions to consider [E, p.3]. A real-time manager view is stated as a problem [E, p.2]; treating it as a feature is [I].
 - **Technology [E, p.2]:** under "Preferred": Angular; C#/.NET or Java/Spring Boot; REST/HTTP and Kafka, with the split to be decided and explained. Everything else is the developer's decision.
 - **Workflow:** report, pick up, review and assess, request and receive information if needed, settle or reject, decision received. The brief defines no status names or state machine; any status model is [I].
-- **Deliverables [E, p.3]:** Git repository with meaningful history; application that starts locally; this journal, committed alongside the code; any appropriate supporting documentation. No public hosting and no Chubb proprietary information, material or branding.
+- **Deliverables [E, p.3]:** Git repository with meaningful history; application that starts locally; this journal, committed alongside the code; any appropriate supporting documentation. No public hosting and no [company] proprietary information, material or branding.
 - **Journal requirement [E, p.3]:** log what was asked, accepted, challenged and overrode, with brief reasoning. The developer signs off every line.
 - **Priorities [E]:** start with the backend, where most time should go; a well-built backend with a partial frontend outscores a rushed attempt at both (p.2). Target 2–3 hours, hard cap 5 (p.1, p.3). Build what matters most well (p.3).
 - **Suggested order [I]:** claim lifecycle backend, REST/Kafka split, workload/performance/exposure data, thin Angular slice; local start, commits and journal throughout.
@@ -220,7 +220,7 @@ The AI checked the local tools first: .NET SDK 10.0.404, Node 26.7.0, Docker ins
    - The assessment requires six markets but does not specify their names.
    - Use these illustrative APAC demo markets:
      Malaysia (MYR), Singapore (SGD), Australia (AUD), Hong Kong (HKD), Japan (JPY), and New Zealand (NZD).
-   - Clearly document that these are developer assumptions for demonstration, not confirmed Chubb operating markets.
+   - Clearly document that these are developer assumptions for demonstration, not confirmed [company] operating markets.
    - Ensure liability exposure remains grouped by currency.
 
 3. **Performance metrics**
@@ -319,7 +319,7 @@ Items without a source in the brief are assumptions or interpretations.
 ### Assumptions to carry into the README
 
 - Clarification to Prompt 3, which is preserved verbatim: the assessment mentions six markets as background context (p.2) but does not explicitly require implementing six markets.
-- The markets Malaysia (MYR), Singapore (SGD), Australia (AUD), Hong Kong (HKD), Japan (JPY) and New Zealand (NZD) are developer assumptions for demonstration, not confirmed Chubb operating markets.
+- The markets Malaysia (MYR), Singapore (SGD), Australia (AUD), Hong Kong (HKD), Japan (JPY) and New Zealand (NZD) are developer assumptions for demonstration, not confirmed [company] operating markets.
 - Claims decided per officer and average submission-to-decision time are interpretations of "workload and performance" (p.2).
 
 ### Time tracking
@@ -1414,3 +1414,16 @@ The AI's demonstration script first failed because it declared a variable name t
 - NuGet packages were already cached, so a first download was not tested.
 - The documented `C:\Temp` database override was verified earlier with a different folder (Entry 13).
 - No screenshots are included.
+
+---
+
+## Entry 18: Journal wording update
+
+- **Date:** 2026-11-25
+- **Task:** Remove the company name from the project
+- **AI tool:** Claude Code (Claude Opus 5.5)
+- **Request:** Before submission the developer was reminded that no company proprietary information, material or branding may be used, and asked that the company not be mentioned in the project.
+- **Change:** The name was replaced with "[company]" in four places: two quoted developer prompts (Entries 1 and 2), one summary of the brief (Entry 1) and one assumption (Entry 2). Those two prompts are therefore no longer word-for-word; nothing else in earlier entries was changed.
+- **AI recommendation:** The AI first recommended leaving the name as a factual record, and offered this replacement as the cautious option.
+- **Developer decision (override):** Remove the name.
+- **Limitation:** Commits made before this entry still contain the name. The history was not rewritten.
