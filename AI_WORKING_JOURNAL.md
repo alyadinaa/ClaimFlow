@@ -556,3 +556,64 @@ No tests exist yet, so none were run.
 ### Time tracking
 
 Project scaffolding and environment preparation have started. Feature implementation has not started. No time-spent figures are recorded.
+
+---
+
+## Entry 5: EF Core and SQLite setup
+
+- **Date:** 2026-11-25
+- **Task:** Phase 4, Stage A: EF Core and SQLite setup
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Request and process
+
+The developer asked for a setup proposal before any changes. The AI proposed two stages: A (packages, empty DbContext, configuration) and B (entities and first migration). The developer approved Stage A with clarifications, asked for the exact files and commands, and then confirmed execution.
+
+### Completed work
+
+1. Installed `Microsoft.EntityFrameworkCore.Sqlite` 10.0.15.
+2. Installed `Microsoft.EntityFrameworkCore.Design` 10.0.15 with `PrivateAssets="all"` (stored as a nested element in the project file).
+3. Created a local tool manifest at `backend/dotnet-tools.json`.
+4. Installed local `dotnet-ef` version 10.0.15.
+5. Created the empty `ClaimFlowDbContext`.
+6. Registered the DbContext in `Program.cs`.
+7. Configured the SQLite connection string in `appsettings.json`.
+8. Resolved the default database path using ASP.NET Core `ContentRootPath`.
+9. Added support for the `ConnectionStrings__ClaimFlow` environment-variable override, using ASP.NET Core's standard configuration.
+
+### Verification results
+
+- Build succeeded with 0 warnings and 0 errors.
+- `dotnet ef --version` returned 10.0.15.
+- EF Core successfully discovered `ClaimFlow.Api.Data.ClaimFlowDbContext`.
+- Default SQLite data source resolved inside the API project folder.
+- Environment-variable override successfully changed the data source to `C:\Temp\override-test.db`.
+- API started successfully and `/openapi/v1.json` returned HTTP 200.
+- No database file was created.
+- No migrations were created.
+- Vulnerability check found no known vulnerable packages.
+- `git diff --check` passed (it covers changes to tracked files, not new untracked files).
+- `dotnet ef dbcontext info` warned that no entity configurations were found, as expected with an empty model.
+- Tests were not run because no tests exist yet.
+
+### AI review and developer decisions
+
+- The initial database path recommendation was clarified to use `ContentRootPath` rather than relying on the current working directory.
+- The AI then corrected its own earlier claim that the same file would always be used: `ContentRootPath` is set from the working directory by default, so some ways of starting the API can resolve a different path.
+- The developer approved documenting `dotnet run` as the supported local startup method for this configuration.
+- The default database path and environment override were verified.
+- The implementation followed the approved Stage A scope.
+
+### Requirements and developer decisions
+
+- **Assessment (p.2):** The database is left to the developer.
+- **Developer decisions:** SQLite, EF Core 10.0.15, the folder structure, no repository layer and the path approach. The assessment does not prescribe these.
+
+### Current implementation boundary
+
+- No claim entities or entity configurations.
+- No database migrations or database file.
+- No authentication implementation.
+- No Kafka implementation.
+- No repository layer.
+- No feature implementation yet.
