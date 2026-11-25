@@ -617,3 +617,109 @@ The developer asked for a setup proposal before any changes. The AI proposed two
 - No Kafka implementation.
 - No repository layer.
 - No feature implementation yet.
+
+---
+
+## Entry 6: Claim domain and database design (Phase 5)
+
+- **Date:** 2026-11-25
+- **Task:** Entity, relationship and constraint design
+- **AI tool:** Claude Code (Claude Opus 5.5)
+- **Output:** Design discussion only. No entities, migrations or other code.
+
+### Assessment requirements and developer assumptions
+
+- **Assessment:** p.3 asks what the core entities are and how they relate. It names no entities, fields, tables or constraints. p.2 names motor and property claims and the claimant and staff activities.
+- **Developer decisions and assumptions:** everything under "Approved design" below.
+
+### Request (condensed)
+
+The developer asked for a design of User, Claim, ClaimHistory and InformationRequest covering fields, relationships, keys, indexes, constraints, enums, dates, money, versioning and the one-open-request rule. Constraints: no extra entities without clear reason, no repository layer, and "Identify any conflicts or missing decisions instead of guessing."
+
+### AI proposal
+
+- Four entities, with no additions.
+- Foreign keys restrict deletion; indexes, check constraints and a filtered unique index.
+- Ten open questions (Q1–Q10), including a gap: a version check at save time does not catch a user acting on an old page. Example: an officer reassesses a claim in one tab and settles from another that still shows the old amount.
+- The AI named Q3, Q5 and Q8 as the decisions most worth challenging.
+
+### Approved design
+
+**Entities** (`?` = optional)
+
+| Entity | Fields |
+|---|---|
+| User | Id, Email, DisplayName, PasswordHash, Role |
+| Claim | Id, ClaimantId, AssignedOfficerId?, Type, Market, CurrencyCode, Status, IncidentDate, Description, VehicleRegistration?, PropertyAddress?, ClaimedAmountMinor, AssessedAmountMinor?, SettlementAmountMinor?, RejectionReason?, SubmittedAtUtc, DecidedAtUtc?, Version |
+| ClaimHistory | Id, ClaimId, Action, FromStatus?, ToStatus, ActorId, ActorRole, OccurredAtUtc, Note?, AmountMinor?, CurrencyCode?, InformationRequestId? |
+| InformationRequest | Id, ClaimId, RequestedById, Question, RequestedAtUtc, Status, Response?, RespondedAtUtc? |
+
+**Relationships**
+- A claim has one claimant and zero or one assigned officer.
+- A claim has one or more history rows and zero or more information requests.
+- A history row may reference one information request. **One information request can be referenced by multiple history rows**, such as T4 and T5.
+- Each history row has one actor; each information request has one requesting officer.
+- Deleting a referenced row is refused.
+
+**Indexes:** unique User email; Claim by claimant, by status, and by assigned officer with status; ClaimHistory by claim and Id; InformationRequest by claim, plus a unique index on claim where status is Open.
+
+**Check constraints**
+- A claim has no officer if and only if it is Submitted.
+- Claimed amount above zero; other amounts above zero when present.
+- Settlement amount present if and only if Settled.
+- Rejection reason present if and only if Rejected.
+- Decision time present if and only if Settled or Rejected.
+- Vehicle registration for Motor only; property address for Property only.
+- Response and response time present if and only if the request is Answered.
+
+**Representation:** enums as text; market as an enum with a fixed lookup for currency, decimal places and time zone; no money value object; UTC `DateTime` for timestamps; `DateOnly` for incident date; `long` minor units; `int` version increased by every transition.
+
+**One open information request:** lifecycle rule, version check and filtered unique index. Request status is Open, Answered or Closed; T8 closes the open request.
+
+**Limits of the database:** application code must check that the assigned user is an officer, that transitions are legal, and that a history row's request belongs to the same claim. SQLite does not enforce text lengths.
+
+### Developer decisions on Q1–Q10
+
+| # | Topic | Decision |
+|---|---|---|
+| Q1 | History detail | Approved: AmountMinor, CurrencyCode and InformationRequestId added to ClaimHistory where applicable |
+| Q2 | Rejection reason | Approved: on Claim for current state and in ClaimHistory for the event |
+| Q3 | Keys | Approved: int. Access control must never rely on IDs being difficult to guess |
+| Q4 | Type detail | Approved: VehicleRegistration for Motor, PropertyAddress for Property |
+| Q5 | Policy number and incident location | **Adjusted** (below) |
+| Q6 | Maximum amount | Approved: 1,000,000,000,000 minor units per claim, as a technical safeguard. A developer assumption, not a business rule from the assessment |
+| Q7 | Append-only history | Approved: enforced through application design, without SQLite triggers. Limitation: direct database edits remain possible |
+| Q8 | Stale versions | **Strongly approved:** every action on an existing claim must include the version observed by the client; stale versions get HTTP 409 |
+| Q9 | Text limits | Approved: email 254, name 100, registration 20, address 300 |
+| Q10 | Past incident dates | Approved: no arbitrary restriction |
+
+### Developer decision
+
+**Developer decision: Approved with adjustments**
+
+- **Accepted:** Decisions 2–6 (relationships, indexes and constraints, enums, representation, open-request rule); Q1–Q4 and Q6–Q10.
+- **Adjusted (entities and Q5):** The AI proposed leaving out both policy number and incident location. The developer left PolicyNumber out of the MVP and kept the approved representative market time zones, but retained incident location as a production requirement, because production incident-date validation should use the actual incident location. **This production capability is not implemented in the MVP.**
+- **Clarified (history and requests):** The developer required that one information request can be referenced by multiple history events. The AI's table linked both T4 and T5, but its diagram did not make this clear.
+- **Conditions added (Q3, Q6, Q7):** Access control must not rely on hard-to-guess IDs; the amount limit is labelled an assumption; the direct-edit limitation is documented.
+- **Overridden:** None.
+
+### Follow-up clarifications
+
+The AI asked two questions after the decisions above, and recommended that T8 also reference the request it closes. The developer approved both clarifications.
+
+**Incident location**
+- `IncidentLocation` is not included in the MVP Claim entity.
+- It is retained as a documented production requirement.
+- MVP incident-date validation uses the approved representative market time zones.
+
+**T8 history reference**
+- When T8 rejects a claim from AwaitingInformation, its ClaimHistory entry must reference the request being closed through `InformationRequestId`.
+- The request status changes to Closed in the same transaction as the rejection.
+- The many-to-one relationship is preserved: multiple ClaimHistory records may reference the same InformationRequest.
+- `InformationRequestId` in ClaimHistory must not be unique.
+
+T4, T5 and T8 therefore reference a request; other history entries do not.
+
+### Current implementation boundary
+
+No entities, entity configurations, migrations or database file exist yet.
