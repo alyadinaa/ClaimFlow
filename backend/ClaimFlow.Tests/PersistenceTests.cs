@@ -233,6 +233,23 @@ public sealed class PersistenceTests : IDisposable
         Assert.Equal(2, claim.History.Count);
     }
 
+    // The API maps this exception to 409; the unique index could otherwise fail first.
+    [Fact]
+    public void Two_stale_information_requests_fail_as_a_concurrency_conflict()
+    {
+        var id = SaveInReview();
+        using var first = NewContext();
+        using var second = NewContext();
+        Load(first, id).RequestInformation(_officer, 2, "First question", _clock);
+        Load(second, id).RequestInformation(_officer, 2, "Second question", _clock);
+        first.SaveChanges();
+
+        Assert.Throws<DbUpdateConcurrencyException>(() => second.SaveChanges());
+
+        using var db = NewContext();
+        Assert.Equal("First question", Assert.Single(Load(db, id).InformationRequests).Question);
+    }
+
     [Theory]
     [InlineData("AssignedOfficerId = 2", "CK_Claims_Assignment")]
     [InlineData("ClaimedAmountMinor = 0", "CK_Claims_ClaimedAmount")]

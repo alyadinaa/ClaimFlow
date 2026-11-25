@@ -34,4 +34,12 @@ public class ClaimsController(ClaimService claims) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<List<ClaimantHistoryResponse>>> History(int id) =>
         await claims.GetHistoryForClaimantAsync(User.GetUserId(), id);
+
+    [HttpPost("{id:int}/information")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ClaimantClaimResponse>> ProvideInformation(int id, ProvideInformationRequest request) =>
+        await claims.ProvideInformationAsync(User.GetUserId(), id, request);
 }

@@ -17,7 +17,35 @@ public record SubmitClaimRequest(
 
 public record PickUpClaimRequest([Required] int? ExpectedVersion);
 
-// Claimant view: contains no assessment or officer information.
+// Only ExpectedVersion is required here. Other inputs are checked by Claim, after permission,
+// version and status, so that the approved error order is kept.
+public record RecordAssessmentRequest([Required] int? ExpectedVersion, long? AmountMinor);
+
+public record RequestInformationRequest([Required] int? ExpectedVersion, string? Question);
+
+public record ProvideInformationRequest([Required] int? ExpectedVersion, string? Response);
+
+public record SettleClaimRequest([Required] int? ExpectedVersion, string? Note);
+
+public record RejectClaimRequest([Required] int? ExpectedVersion, string? Reason);
+
+// Shown to both roles. Contains no officer identity.
+public record InformationRequestResponse(
+    int Id,
+    string Question,
+    InformationRequestStatus Status,
+    DateTime RequestedAtUtc,
+    string? Response,
+    DateTime? RespondedAtUtc)
+{
+    public static List<InformationRequestResponse> From(Claim c) => c.InformationRequests
+        .OrderBy(r => r.Id)
+        .Select(r => new InformationRequestResponse(
+            r.Id, r.Question, r.Status, r.RequestedAtUtc, r.Response, r.RespondedAtUtc))
+        .ToList();
+}
+
+// Claimant view: contains no assessment data and no officer names or IDs.
 public record ClaimantClaimResponse(
     int Id,
     ClaimType Type,
@@ -34,12 +62,14 @@ public record ClaimantClaimResponse(
     string? RejectionReason,
     DateTime SubmittedAtUtc,
     DateTime? DecidedAtUtc,
-    int Version)
+    int Version,
+    List<InformationRequestResponse> InformationRequests)
 {
     public static ClaimantClaimResponse From(Claim c) => new(
         c.Id, c.Type, c.Market, c.CurrencyCode, MarketCatalog.Get(c.Market).DecimalPlaces, c.Status,
         c.IncidentDate, c.Description, c.VehicleRegistration, c.PropertyAddress, c.ClaimedAmountMinor,
-        c.SettlementAmountMinor, c.RejectionReason, c.SubmittedAtUtc, c.DecidedAtUtc, c.Version);
+        c.SettlementAmountMinor, c.RejectionReason, c.SubmittedAtUtc, c.DecidedAtUtc, c.Version,
+        InformationRequestResponse.From(c));
 }
 
 public record OfficerClaimResponse(
@@ -63,13 +93,15 @@ public record OfficerClaimResponse(
     string? RejectionReason,
     DateTime SubmittedAtUtc,
     DateTime? DecidedAtUtc,
-    int Version)
+    int Version,
+    List<InformationRequestResponse> InformationRequests)
 {
     public static OfficerClaimResponse From(Claim c) => new(
         c.Id, c.ClaimantId, c.Claimant.DisplayName, c.AssignedOfficerId, c.AssignedOfficer?.DisplayName,
         c.Type, c.Market, c.CurrencyCode, MarketCatalog.Get(c.Market).DecimalPlaces, c.Status,
         c.IncidentDate, c.Description, c.VehicleRegistration, c.PropertyAddress, c.ClaimedAmountMinor,
-        c.AssessedAmountMinor, c.SettlementAmountMinor, c.RejectionReason, c.SubmittedAtUtc, c.DecidedAtUtc, c.Version);
+        c.AssessedAmountMinor, c.SettlementAmountMinor, c.RejectionReason, c.SubmittedAtUtc, c.DecidedAtUtc, c.Version,
+        InformationRequestResponse.From(c));
 }
 
 // Claimant view: assessment events are left out, and actors are shown by role only.

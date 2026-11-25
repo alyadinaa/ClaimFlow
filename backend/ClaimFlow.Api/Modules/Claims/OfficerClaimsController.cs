@@ -32,4 +32,40 @@ public class OfficerClaimsController(ClaimService claims) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<OfficerClaimResponse>> PickUp(int id, PickUpClaimRequest request) =>
         await claims.PickUpAsync(User.GetUserId(), id, request.ExpectedVersion!.Value);
+
+    [HttpPost("{id:int}/assessment")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<OfficerClaimResponse>> RecordAssessment(int id, RecordAssessmentRequest request) =>
+        await claims.RecordAssessmentAsync(User.GetUserId(), id, request);
+
+    [HttpPost("{id:int}/information-requests")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<OfficerClaimResponse>> RequestInformation(int id, RequestInformationRequest request) =>
+        await claims.RequestInformationAsync(User.GetUserId(), id, request);
+
+    [HttpPost("{id:int}/settle")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<OfficerClaimResponse>> Settle(int id, SettleClaimRequest request) =>
+        await claims.SettleAsync(User.GetUserId(), id, request);
+
+    [HttpPost("{id:int}/reject")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<OfficerClaimResponse>> Reject(int id, RejectClaimRequest request) =>
+        await claims.RejectAsync(User.GetUserId(), id, request);
 }
