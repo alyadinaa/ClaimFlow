@@ -1119,3 +1119,57 @@ The developer asked for a frontend foundation that uses the actual backend contr
 - The proxy works only in development; deployment is not configured.
 - All pages except login and Account are placeholders.
 - The README still says there is no user interface and that Node.js is not needed. It must be updated.
+
+---
+
+## Entry 13: Project README (Phase 9, retrospective)
+
+- **Date of work:** 2026-11-25
+- **Task:** Root README and local setup documentation
+- **AI tool:** Claude Code (Claude Opus 5.5)
+- **Order:** Phase 9 was completed and committed before Phase 10A (Entry 12). It had no journal entry at the time. The AI pointed out the gap after Phase 10A, and this entry was then added at the developer's request.
+
+### Request and process
+
+The developer asked for a concise README for the assessment panel, with every command and credential verified against the actual code, no invented features, and no changes to application code or configuration.
+
+### Assessment requirements and developer decisions
+
+- **Assessment (p.3):** a working application that can be started locally, and any supporting documentation the developer feels is appropriate. A README is not specifically required.
+- **Developer decisions:** the README's content, structure and assumptions wording.
+
+### Completed work
+
+- Created the root `README.md` (239 lines), committed as `db555d5 docs: add project README`.
+- It documented features, architecture, project structure, backend setup, demo accounts, database behaviour, tests, API endpoints, design decisions, assumptions and limitations.
+- At that point the frontend had not been implemented. The README stated that there was no user interface, no registration and no Kafka implementation.
+
+### Verification
+
+Tested from a clean temporary clone, which was then deleted:
+- `dotnet run` started the API and created the default database, which Git ignores.
+- The "Try it" script ran as written.
+- All 16 documented endpoints matched the live OpenAPI document.
+- 129 tests passed.
+- The migration tool commands and the database path override worked.
+
+**Limits:** the override was tested with a different folder from the documented `C:\Temp`, and NuGet packages were already cached. After these tests the AI redrew the lifecycle diagram, because one arrow pointed to nothing, and clarified that assessment is required before settlement. No commands changed.
+
+### Credential search: timing
+
+- The credential search was part of the staged review, but **it failed to run before the commit** because of an error in the AI's search pattern. The AI's command did not stop on that failure, and the commit went ahead without the check.
+- The AI ran the search immediately afterwards against the committed README. It found only the two intended demo logins. No signing key value, personal names, local user paths or tokens were included.
+- The whitespace check and the check that only `README.md` was staged did pass before the commit.
+- The AI reported the failure to the developer. For Phase 10A, the secret search was run and reviewed before committing.
+
+### Decisions
+
+**Developer decision: README approved**
+
+- **Accepted:** The README content and the reported verification.
+- **Challenged:** The AI noted that the market disclaimer mentioned the insurer's name and that the brief bars its material and branding (p.3). The developer directed neutral wording: "not confirmed operating markets of any particular insurer."
+- **Overridden:** None.
+
+### Status
+
+The working tree was clean after the commit. The README has not yet been updated for the Angular application.
