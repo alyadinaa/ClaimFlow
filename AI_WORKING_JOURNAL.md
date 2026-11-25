@@ -1363,3 +1363,54 @@ The developer asked for the officer experience using the actual backend contract
 - Unsent text is lost when leaving the page.
 - The confirmation moves focus to its button but does not trap focus.
 - Kafka is not implemented. The README has not been updated for the Angular application.
+
+---
+
+## Entry 17: README for the complete application
+
+- **Date:** 2026-11-25
+- **Task:** Update the README for the Angular frontend and prepare for submission
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Request and process
+
+The developer asked for the README to let a reviewer understand, install, run and demonstrate the complete application, using actual configuration and verified commands, without changing application code, configuration or packages.
+
+### README update
+
+- Project overview with both roles, features available on screen, and current architecture and versions.
+- Project structure covering backend and frontend.
+- Prerequisites, two-window startup, development proxy explanation and demonstration steps.
+- Frontend test and build commands, frontend design decisions, Kafka decision and current limitations.
+- Existing lifecycle, API reference, database, assumptions and design decisions were kept.
+
+**Corrected outdated statements:** "There is no user interface yet" and that Node.js is not needed. The supported Node.js versions come from the installed Angular CLI's published requirements. The resolved Angular user-interface limitation was removed.
+
+### Verification
+
+Tested from clean temporary clones, with no local configuration, which were then deleted:
+- The API and frontend started with the documented commands, using the default database.
+- Login worked for both demo roles through the proxy. All seven demonstration steps worked in headless Chrome, with no uncaught errors.
+- The API script ran as written, and all 16 documented endpoints matched the live OpenAPI document.
+- 129 backend tests, 118 frontend tests and the Angular production build passed. The migration tool commands worked.
+
+The AI's demonstration script first failed because it declared a variable name twice. The AI fixed the script and reran that part from a second clean clone.
+
+### Kafka decision
+
+- **Background:** Entry 2 made Kafka optional, after a working and tested core, and only with renewed developer approval. The AI reported that the condition was met and recommended updating the README first.
+- **Developer decision:** Kafka is not implemented. Synchronous REST was selected to prioritise a reliable, runnable MVP within the assessment time limit. The README says so and describes an outbox-based extension as a future possibility only.
+- **Assessment (p.2):** lists REST/HTTP and Kafka under preferred technology and asks the developer to decide what uses which and to explain it. Leaving Kafka out is a known gap against that preference.
+
+### Decisions
+
+- **Accepted:** The README update, subject to a clean review.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Remaining documentation limitations
+
+- Commands were verified on one Windows computer with .NET 10.0.404 and Node.js 26.7.0. Other listed Node.js versions were not tested.
+- NuGet packages were already cached, so a first download was not tested.
+- The documented `C:\Temp` database override was verified earlier with a different folder (Entry 13).
+- No screenshots are included.

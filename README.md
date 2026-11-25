@@ -1,18 +1,24 @@
 # ClaimFlow
 
-ClaimFlow is a motor and property claims management platform. Claimants report incidents, track their claims and answer questions. Claims officers pick up, assess and decide claims, and see their team's workload, performance and outstanding liability exposure.
+ClaimFlow is a motor and property claims management platform. One web application serves two user roles:
 
-**Current state:** the backend API is complete for the claim lifecycle and dashboard, with 129 automated tests. There is no user interface yet, and Kafka is not implemented. See [Limitations](#limitations-and-future-improvements).
+- **Claimants** report incidents, track their claims, answer questions and receive decisions.
+- **Claims officers** pick up, assess and decide claims, and see their team's workload, performance and outstanding liability exposure.
+
+It has an Angular frontend and an ASP.NET Core API, covering the full claim lifecycle from submission to settlement or rejection, with 247 automated tests. **Kafka is not implemented**; see [Kafka decision](#kafka-decision) and [Limitations](#limitations-and-future-improvements).
 
 ## Features
 
-| Area | Implemented |
+| Area | Implemented in the web application and API |
 |---|---|
 | Login | Email and password with two demo users. There is no registration |
-| Claimant | Submit a claim, list and track own claims, view history, answer information requests, see decisions |
-| Claims officer | View incoming and own claims, pick up, record assessment, request information, settle, reject |
-| Dashboard | Claims by status, workload and performance per officer |
-| Exposure | Outstanding liability per currency |
+| Claimant: claims | Submit Motor and Property claims, list own claims, view status, details and history |
+| Claimant: information | Read an officer's question and answer it |
+| Claimant: decisions | See the settlement amount or rejection reason. Assessments are never shown |
+| Officer: lists | Incoming claims and own assigned claims |
+| Officer: actions | Pick up, assess and reassess, request information, settle, reject. Settling and rejecting need confirmation |
+| Officer: dashboard | Claim counts, workload and average decision time per officer |
+| Officer: exposure | Outstanding liability per currency, with no total across currencies |
 
 ### Claim lifecycle
 
@@ -31,22 +37,27 @@ AwaitingInformation  ── officer rejects ────────────
 
 ## Architecture
 
-A modular monolith: one ASP.NET Core API with one SQLite database.
+One Angular application and a modular monolith: one ASP.NET Core API with one SQLite database.
 
 ```text
-HTTP client ──REST/JSON + JWT──► ASP.NET Core API ──EF Core──► SQLite
-                                 Auth │ Claims │ Dashboard
+Angular application ──REST/JSON + JWT──► ASP.NET Core API ──EF Core──► SQLite
+/login /claimant /officer                Auth │ Claims │ Dashboard
 ```
 
 | Part | Technology |
 |---|---|
+| Frontend | Angular 22.3.0, TypeScript 6 (strict), RxJS 7.8. No UI or chart library |
 | API | C#, .NET 10, ASP.NET Core Web API |
 | Data | Entity Framework Core 10.0.15, SQLite |
 | Authentication | JWT bearer tokens, ASP.NET Core `PasswordHasher` |
 | API description | OpenAPI |
-| Tests | xUnit, ASP.NET Core test host, in-memory SQLite |
+| Backend tests | xUnit, ASP.NET Core test host, in-memory SQLite |
+| Frontend tests | Vitest |
 
-Controllers are thin. `ClaimService` loads a claim, calls a method on the `Claim` entity and saves once. All lifecycle rules are in `Claim`.
+- **Backend:** controllers are thin. `ClaimService` loads a claim, calls a method on the `Claim` entity and saves once. All lifecycle rules are in `Claim`.
+- **Frontend:** services call the API, an interceptor adds the token, and route guards keep each role in its own area. Guards only guide navigation; **the API enforces roles, ownership and assignment**.
+- **History:** every action adds a `ClaimHistory` row in the same save as the claim change.
+- **Concurrency:** every action on an existing claim sends `expectedVersion`. A stale version gets 409, and the screens reload the claim instead of repeating the action.
 
 ## Project structure
 
@@ -54,37 +65,65 @@ Controllers are thin. `ClaimService` loads a claim, calls a method on the `Claim
 ClaimFlow/
 ├── README.md
 ├── AI_WORKING_JOURNAL.md          AI prompts, decisions and challenges
-└── backend/
-    ├── ClaimFlow.slnx
-    ├── dotnet-tools.json          Pins the dotnet-ef tool
-    ├── ClaimFlow.Api/
-    │   ├── Modules/
-    │   │   ├── Auth/              Login, JWT, users
-    │   │   ├── Claims/            Lifecycle, markets, endpoints
-    │   │   └── Dashboard/         Team figures and exposure
-    │   ├── Data/                  DbContext, configurations, migrations, demo users
-    │   ├── Infrastructure/        Error responses, OpenAPI security
-    │   └── Program.cs
-    └── ClaimFlow.Tests/           Domain, persistence and API tests
+├── backend/
+│   ├── ClaimFlow.slnx
+│   ├── dotnet-tools.json          Pins the dotnet-ef tool
+│   ├── ClaimFlow.Api/
+│   │   ├── Modules/
+│   │   │   ├── Auth/              Login, JWT, users
+│   │   │   ├── Claims/            Lifecycle, markets, endpoints
+│   │   │   └── Dashboard/         Team figures and exposure
+│   │   ├── Data/                  DbContext, configurations, migrations, demo users
+│   │   ├── Infrastructure/        Error responses, OpenAPI security
+│   │   └── Program.cs
+│   └── ClaimFlow.Tests/           Domain, persistence and API tests
+└── frontend/
+    └── claimflow-web/
+        ├── proxy.conf.json        Forwards /api to the backend
+        └── src/app/
+            ├── core/              API access, authentication, models
+            ├── features/          auth, claimant and officer screens
+            └── shared/            Page shell, status badge, shared styles
 ```
 
 ## Prerequisites
 
 - Windows with PowerShell
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (developed with 10.0.404)
-- Internet access for the first build, to download NuGet packages
+- [Node.js](https://nodejs.org/) 22.22.3 or later in version 22, 24.15.0 or later in version 24, or 26 and later (developed with 26.7.0)
+- npm 8 or later, included with Node.js (developed with 11.19.0)
+- Git, to clone the repository
+- Internet access for the first run, to download packages
 
-No database server, Docker or Node.js is needed.
+No database server, Docker, Kafka or global Angular CLI is needed.
 
 ## Run locally
 
-From the repository root:
+Use two PowerShell windows, both starting in the repository root.
+
+**1. Start the API**
 
 ```powershell
 dotnet run --project backend/ClaimFlow.Api
 ```
 
-The API listens on **http://localhost:5032**. The API description is at http://localhost:5032/openapi/v1.json. The root address `/` is not an endpoint, so use the API paths below. Press Ctrl+C to stop.
+Wait for `Now listening on: http://localhost:5032`. The API description is at http://localhost:5032/openapi/v1.json. The root address `/` is not an endpoint.
+
+**2. Start the frontend**
+
+```powershell
+cd frontend/claimflow-web
+npm.cmd ci
+npm.cmd start
+```
+
+`npm.cmd` works even if PowerShell blocks script files. The first command is needed only once.
+
+**3. Open http://localhost:4200** and log in with a demo account below. To use both roles together, open the second in a different browser or a private window.
+
+Press Ctrl+C in each window to stop.
+
+**How they connect:** the browser calls `/api` on the frontend's own address. The Angular development server forwards those calls to `http://localhost:5032`, as set in `proxy.conf.json`, so no CORS setting is needed. The proxy is for development only.
 
 ### Demo credentials
 
@@ -95,9 +134,21 @@ The API listens on **http://localhost:5032**. The API description is at http://l
 
 These credentials and the JWT signing key are in `backend/ClaimFlow.Api/appsettings.Development.json`. **They are for local assessment use only and must never be used in production.** Outside Development, the API refuses to start unless `Jwt:Key` is configured.
 
-### Try it
+### Demonstration
 
-With the API running, paste this into a second PowerShell window. It submits, picks up, assesses and settles a claim, then shows the dashboard.
+1. As the **claimant**, choose Submit Claim and submit a Motor or Property claim.
+2. As the **officer**, open Incoming Claims and pick it up, then open it.
+3. Choose Request information and ask a question.
+4. As the **claimant**, open the claim and send an answer.
+5. As the **officer**, reload the claim, record an assessment, then settle it. Alternatively, reject it with a reason.
+6. As the **claimant**, reload the claim to see the decision.
+7. As the **officer**, open the Dashboard.
+
+Screens do not refresh automatically, so reload to see the other user's changes.
+
+### Try the API without the frontend
+
+With the API running, paste this into another PowerShell window. It submits, picks up, assesses and settles a claim, then shows the dashboard.
 
 ```powershell
 $api = "http://localhost:5032"
@@ -154,11 +205,18 @@ dotnet ef migrations list --project ClaimFlow.Api
 
 ## Run the tests
 
+Backend, from the repository root (129 tests, using in-memory SQLite, so the development database is not touched):
+
 ```powershell
 dotnet test backend/ClaimFlow.slnx
 ```
 
-The 129 tests use in-memory SQLite and do not touch the development database.
+Frontend, from `frontend/claimflow-web` (118 tests, with the API replaced by test data), and the production build:
+
+```powershell
+npm.cmd test -- --watch=false
+npm.cmd run build
+```
 
 ## API reference
 
@@ -198,6 +256,9 @@ Every action on an existing claim must include `expectedVersion`, the claim vers
 | Decision | Reason | Trade-off |
 |---|---|---|
 | Modular monolith | Claim, history and requests save in one transaction; simple to run | Module boundaries rely on discipline |
+| One Angular application with lazily loaded areas | Both roles share login, styling and components | Both roles are released together |
+| Development proxy | Frontend and API share one address, so no CORS | Deployment needs its own setup |
+| Token in `sessionStorage` | Survives a refresh and ends with the tab | Readable by a script injected into the page |
 | REST | Users need an immediate result for each action | No push updates |
 | SQLite and EF Core | No server to install; real constraints and migrations | One writer at a time |
 | No repository layer | `DbContext` already provides data access | Services depend on EF Core |
@@ -208,6 +269,18 @@ Every action on an existing claim must include `expectedVersion`, the claim vers
 | Exposure per currency | Adding currencies would need exchange rates | No single regional total |
 
 Errors follow the order permission, version, status, then input, so that claim state is not revealed to people without access. A missing or malformed version is refused before assignment and ownership checks.
+
+### Kafka decision
+
+**Kafka is not implemented.** Every claim operation uses synchronous REST, because the user needs to know at once whether an action succeeded. Within the assessment time limit, a reliable, tested application that runs locally without extra infrastructure was prioritised over event delivery.
+
+A possible future extension, none of which exists today:
+
+- Save an outbox message in the same transaction as the claim change, so an event cannot be lost.
+- Publish it to a Kafka topic, keyed by claim so that each claim's events stay in order.
+- Let consumers react later, for example by notifying the claimant, ignoring events they have already handled.
+
+REST would remain the way to change a claim, so the application would keep working if Kafka were unavailable. `ClaimHistory` records the same business events but is not an event queue.
 
 ### Assumptions
 
@@ -226,14 +299,19 @@ The brief does not specify these points. They are developer assumptions or inter
 
 | Not implemented or verified | Future improvement |
 |---|---|
-| Angular user interface | Claimant and officer screens, dashboard; configure CORS or a development proxy |
-| Kafka | Publish claim events through an outbox for notifications |
+| Kafka and notifications | See [Kafka decision](#kafka-decision) |
+| Automatic screen refresh | Polling or push updates |
+| Paging, sorting and filtering of lists | Add to the API and screens |
 | Registration, login rate limiting, token revocation | Company identity provider |
-| HTTPS in the local profile | HTTPS is required in production |
+| Deployment; HTTPS in the local profile | Hosting setup; HTTPS is required in production |
+| Recognising a repeated claim submission after a lost connection | A request key checked by the API |
+| Market settings are copied in the frontend | A market endpoint |
+| Saving unsent form text | Drafts, or a warning before leaving |
+| Browser tests in the repository | Add the temporary browser checks as a test suite |
 | Reassignment, withdrawal, appeal, file attachments | Add with agreed business rules |
 | Incident location | Use it for the production time zone |
 | Dashboard date filters and market breakdown | Add as query parameters |
 | Truly simultaneous requests and large data volumes are untested | Load tests; PostgreSQL or SQL Server |
 | History is append-only in the application only | Database permissions or triggers |
 
-Two smaller points: dashboard counts and averages come from separate queries, and the default database path depends on starting the API with `dotnet run` as shown.
+Some smaller points: times are shown in the viewer's time zone; there is one demo officer; dashboard counts and averages come from separate queries, and the default database path depends on starting the API with `dotnet run` as shown.
