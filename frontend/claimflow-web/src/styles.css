@@ -1,0 +1,63 @@
+:root {
+  --navy: #12294b;
+  --navy-dark: #0c1d36;
+  --teal: #12807a;
+  --teal-light: #2fb5a8;
+  --text: #1d2939;
+  --muted: #5b6778;
+  --border: #d5dce6;
+  --surface: #ffffff;
+  --background: #f4f6f9;
+  --danger: #b42318;
+  --danger-surface: #fef3f2;
+  --radius: 8px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+h1,
+h2 {
+  color: var(--navy);
+  line-height: 1.25;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--teal-light);
+  outline-offset: 2px;
+}
+
+.card {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  background: var(--danger-surface);
+  border: 1px solid #fda29b;
+  border-radius: var(--radius);
+  color: var(--danger);
+}

@@ -1,0 +1,72 @@
+<div class="page">
+  <section class="intro">
+    <p class="brand">Claim<span>Flow</span></p>
+    <p class="headline">Motor and property claims, clear at every step.</p>
+    <ul>
+      <li>Report an incident and follow its progress</li>
+      <li>Answer questions and receive decisions</li>
+      <li>Manage your team's claims in one place</li>
+    </ul>
+  </section>
+
+  <main>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <h1>Log in</h1>
+      <p class="hint">For claimants and claims officers.</p>
+
+      @if (error(); as message) {
+        <p class="alert" role="alert">{{ message }}</p>
+      } @else if (auth.sessionExpired()) {
+        <p class="alert" role="alert">Your session has ended. Please log in again.</p>
+      }
+
+      @let email = form.controls.email;
+      @let emailInvalid = submitted() && email.invalid;
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        autocomplete="username"
+        [attr.aria-invalid]="emailInvalid"
+        [attr.aria-describedby]="emailInvalid ? 'email-error' : null"
+      />
+      @if (emailInvalid) {
+        <p class="field-error" id="email-error">
+          {{ email.hasError('required') ? 'Enter your email.' : 'Enter a valid email address.' }}
+        </p>
+      }
+
+      @let password = form.controls.password;
+      @let passwordInvalid = submitted() && password.invalid;
+      <label for="password">Password</label>
+      <div class="password">
+        <input
+          id="password"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="current-password"
+          [attr.aria-invalid]="passwordInvalid"
+          [attr.aria-describedby]="passwordInvalid ? 'password-error' : null"
+        />
+        <button
+          type="button"
+          class="toggle"
+          [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          (click)="showPassword.set(!showPassword())"
+        >
+          {{ showPassword() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (passwordInvalid) {
+        <p class="field-error" id="password-error">
+          {{ password.hasError('required') ? 'Enter your password.' : 'The password is too long.' }}
+        </p>
+      }
+
+      <button type="submit" class="submit" [disabled]="loading()">
+        {{ loading() ? 'Logging in…' : 'Log in' }}
+      </button>
+    </form>
+  </main>
+</div>

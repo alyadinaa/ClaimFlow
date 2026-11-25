@@ -1,0 +1,96 @@
+header {
+  background: var(--navy);
+  color: #fff;
+}
+
+.bar,
+nav,
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding-top: 0.9rem;
+  padding-bottom: 0.6rem;
+}
+
+.brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.brand span {
+  color: var(--teal-light);
+}
+
+.area {
+  padding: 0.1rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.user {
+  margin-left: auto;
+  font-size: 0.9rem;
+}
+
+.bar button {
+  padding: 0.35rem 0.9rem;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 50%);
+  border-radius: var(--radius);
+  color: #fff;
+}
+
+.bar button:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.25rem;
+}
+
+nav a {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 3px solid transparent;
+  color: #dbe4f0;
+  text-decoration: none;
+}
+
+nav a:hover {
+  color: #fff;
+}
+
+nav a.active {
+  border-bottom-color: var(--teal-light);
+  color: #fff;
+  font-weight: 600;
+}
+
+main {
+  padding-top: 1.75rem;
+  padding-bottom: 3rem;
+}
+
+.notice {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.notice button {
+  background: none;
+  border: 0;
+  color: inherit;
+  text-decoration: underline;
+}

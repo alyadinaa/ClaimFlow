@@ -1,0 +1,23 @@
+<header>
+  <div class="bar">
+    <span class="brand">Claim<span>Flow</span></span>
+    <span class="area">{{ area() }}</span>
+    <span class="user">{{ auth.displayName() }}</span>
+    <button type="button" (click)="auth.logout()">Log out</button>
+  </div>
+  <nav aria-label="Main">
+    @for (link of links(); track link.path) {
+      <a [routerLink]="link.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ link.label }}</a>
+    }
+  </nav>
+</header>
+
+<main>
+  @if (notice.message(); as message) {
+    <div class="alert notice" role="alert">
+      <span>{{ message }}</span>
+      <button type="button" (click)="notice.clear()">Dismiss</button>
+    </div>
+  }
+  <router-outlet />
+</main>

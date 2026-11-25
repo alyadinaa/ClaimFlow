@@ -1058,3 +1058,64 @@ Inspected in the generated SQL:
 - No date filter or market breakdown.
 - No large-volume performance testing.
 - Angular and README are not implemented.
+
+---
+
+## Entry 12: Angular foundation and authentication (Phase 10A)
+
+- **Date:** 2026-11-25
+- **Task:** Create the Angular application, login, role-based navigation and basic layouts
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Purpose and process
+
+The developer asked for a frontend foundation that uses the actual backend contract ("Do not guess URLs, response property names or roles"), with login for both roles, guards, an interceptor and placeholder layouts. Claim screens were excluded and backend files were not to be modified. The AI inspected the launch settings, login DTOs, JWT claims and roles before writing code.
+
+### Assessment requirements and developer decisions
+
+- **Assessment (p.2):** Angular is the preferred frontend, and both user types access the same Angular application. Frontend architecture is left to the developer.
+- **Developer decisions:** location, standalone components, strict TypeScript, no UI or chart libraries, development proxy instead of CORS, and the navy, white and teal design.
+
+### Implementation
+
+- Angular 22.3.0, the current stable release, whose supported Node versions include the installed 26.7.0. Created with `npx`, so there is no global install.
+- One application with lazily loaded `/claimant` and `/officer` areas that share a page shell.
+- API requests use relative `/api` paths. `proxy.conf.json` forwards them to `http://localhost:5032`, taken from the backend launch settings.
+- Responsive login page with validation, show/hide password, loading state and friendly errors. No registration or forgot-password function.
+- The generated sample page, icon, README and `.vscode` folder were removed.
+
+### Authentication behaviour
+
+| Part | Behaviour |
+|---|---|
+| Session storage | Login response kept in `sessionStorage`: survives a refresh and ends with the tab. Expired, damaged and unknown-role sessions are ignored. Passwords are not stored |
+| Interceptor | Adds the token only to ClaimFlow API requests, not to login or other sites |
+| 401 | Ends the session and opens login with a message. A 401 from login itself means wrong credentials |
+| 403 | Keeps the session and shows the API's reason |
+| Guards | No session leads to login; the wrong role leads to the user's own area. They guide navigation; the API enforces access |
+| Logout | Clears the session and opens login |
+
+### Tests and verification
+
+- Angular build: no errors. `npm audit`: 0 vulnerabilities.
+- **20 frontend unit tests passed.**
+- **Backend unchanged: 129 tests passed.**
+- **Browser check:** 20 of 20 checks passed in headless Chrome with the Angular development server, proxy, real API and a temporary database, with no browser errors. It covered login for both roles, a wrong password, blocked areas, every menu link, logout, real 200 and 403 responses through the proxy, and phone width. It was a temporary script and is not in the repository.
+- With the API stopped, the proxy returned 502. The login page's server-error message was unit-tested with status 500.
+- The AI reviewed screenshots of the desktop login error, phone login and officer pages.
+
+### Decisions
+
+- **Accepted:** The developer accepted Phase 10A for finalisation and commit, subject to a clean final review.
+- **Challenged:** None.
+- **Overridden:** None.
+- **AI choice, different from the earlier plan:** the officer area is `/officer` rather than the `/staff` path in the architecture proposal. Reason: the Phase 10A request calls it the officer area and it matches the API paths.
+- **Trade-off:** `sessionStorage` is readable by a script injected into the page. This was stated in the architecture proposal that the developer approved.
+
+### Known limitations
+
+- The 401 and 403 messages are unit-tested but not tested through the browser interface.
+- Session expiry is noticed on the next navigation or request, not by a timer.
+- The proxy works only in development; deployment is not configured.
+- All pages except login and Account are placeholders.
+- The README still says there is no user interface and that Node.js is not needed. It must be updated.
