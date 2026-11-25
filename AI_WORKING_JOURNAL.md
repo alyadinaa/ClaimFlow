@@ -782,3 +782,65 @@ The assessment does not prescribe this.
 - No service or HTTP endpoints exist yet.
 - No authentication, Kafka or frontend exists yet.
 - User fields are not validated beyond storing email in lowercase.
+
+---
+
+## Entry 8: SQLite migration and persistence verification (Phase 6C)
+
+- **Date:** 2026-11-25
+- **Task:** First EF Core migration and SQLite integration tests
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Request and process
+
+The developer limited this phase to the migration and persistence tests, required EF Core migrations rather than `EnsureCreated`, and told the AI not to change the approved domain design to make tests pass or claim behaviour the tests do not demonstrate. No domain code changed.
+
+### Migration
+
+- **Name:** `20261125051429_InitialCreate`, created with the local `dotnet-ef` tool.
+- Creates four tables, seven restrictive foreign keys and ten check constraints.
+- Includes the unique email index, the ordinary `InformationRequest.ClaimId` index and the filtered unique index for one open request per claim.
+- EF Core reported no pending model changes.
+- `.gitignore` was updated with `*.db-journal`; the `.db`, `.db-wal` and `.db-shm` patterns already existed.
+
+### Integration tests
+
+29 tests use in-memory SQLite, with a connection kept open for each test. Data is reloaded through a new DbContext.
+
+| Coverage | Tests |
+|---|--:|
+| Migration applies and matches the model | 1 |
+| Claim and history saved and loaded; stored value formats | 2 |
+| Settlement amounts, decision time and history | 1 |
+| Request and response history share one request | 1 |
+| T8 rejection, closure and history saved together | 1 |
+| T8 rollback, forcing a failure at each of three write points | 3 |
+| Stale version detected using two copies of the same claim | 1 |
+| Claim check constraints | 9 |
+| Information request answer constraint | 3 |
+| One open request per claim | 1 |
+| Unique email | 1 |
+| Foreign keys enforced | 5 |
+
+### Results
+
+- Build: 0 warnings and 0 errors.
+- **77 tests passed, 0 failed** (48 existing and 29 new).
+- No persistent database file was created.
+
+### Remaining unverified
+
+- Truly simultaneous writes and SQLite locking. The stale-version test is sequential on one connection.
+- File-based database and OneDrive behaviour.
+- Rollback for actions other than T8.
+- Reverse migration.
+- Startup migration and demo-user seeding, which are not implemented yet.
+- Each Restrict foreign key in isolation. The tests show that deletes are refused, not which of several keys refused them.
+
+### Developer decision
+
+**Developer decision: Phase 6C review approved, based on the reported results**
+
+- **Accepted:** The migration, integration tests and `.gitignore` change.
+- **Challenged:** None.
+- **Overridden:** None.
