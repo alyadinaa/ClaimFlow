@@ -985,3 +985,76 @@ The developer asked for the remaining endpoints using the existing domain method
 - No new file-database verification in this phase.
 - CORS, login rate limiting and token revocation remain unimplemented.
 - The README has not been created yet.
+
+---
+
+## Entry 11: Claims dashboard and liability exposure API (Phase 8)
+
+- **Date:** 2026-11-25
+- **Task:** Team dashboard and liability exposure endpoints
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Request and process
+
+The developer specified the two endpoints, figures, exposure rules and tests, and asked the AI to prefer database aggregation, add indexes only if query inspection showed a need, and not add a Manager role. No domain entity, migration, index or package was changed.
+
+### Assessment requirements and developer decisions
+
+- **Assessment:** staff see their team's workload and performance (p.2). Outstanding liability exposure is named as a problem (p.2) and a question to consider (p.3). The brief defines no metric, formula or dashboard layout.
+- **Developer decisions and interpretations:** every figure, definition and endpoint below.
+
+### Endpoints
+
+| Endpoint | Role | Returns |
+|---|---|---|
+| `GET /api/officer/dashboard` | ClaimsOfficer | Team figures, counts by status, one row per officer |
+| `GET /api/officer/dashboard/exposure` | ClaimsOfficer | One row per currency |
+
+Requests without a token return 401; claimants receive 403.
+
+### Calculation definitions
+
+| Figure | Definition |
+|---|---|
+| Total | All claims |
+| Unassigned | Claims with no officer |
+| Open | Submitted, InReview or AwaitingInformation |
+| Decided | Settled or Rejected |
+| Officer: open assigned | InReview or AwaitingInformation |
+| Officer: awaiting information | Part of open assigned, shown separately |
+| Officer: decided | Settled or Rejected |
+| Officer: average time to decision | Mean elapsed time from submission to decision, in seconds, including time waiting for the claimant; null with no decisions |
+| Exposure | Open claims only: assessed amount if present, otherwise claimed amount |
+
+- Exposure is grouped by currency, with a claim count and **no total across currencies**.
+- Amounts stay in minor units. Each row includes the currency's decimal places (JPY has none).
+- Figures cover all time. Officers with no claims appear with zeros.
+
+### Queries
+
+Inspected in the generated SQL:
+- Counts and exposure use `GROUP BY`, `COUNT` and `SUM` in the database.
+- The average reads three columns of decided claims and is calculated in C#, because EF Core does not translate date subtraction for SQLite.
+
+### Tests and results
+
+- Build: 0 warnings and 0 errors.
+- **129 tests passed, 0 failed** (119 existing and 10 new).
+- Coverage: access, empty dashboard, status and officer counts, average time, claimant waiting time, assessed and claimed amounts, separate currencies, exclusion of decided claims, and no emails, password hashes or claimant names.
+- **Initial failure:** one new test failed because the AI's test helper used an email as an officer's display name. The dashboard was correct; the AI fixed the helper and made the check stricter.
+- **Real HTTP check:** the API ran against a temporary file database. Submit, pickup, assessment, settlement, dashboard and exposure all worked. The temporary database was then deleted.
+
+### Developer decision
+
+**Developer decision: Phase 8 implementation approved, based on the reported results**
+
+- **Accepted:** The endpoints, calculations, queries and tests.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Limitations
+
+- Dashboard counts and averages use separate queries, so a decision made between them could differ for one request.
+- No date filter or market breakdown.
+- No large-volume performance testing.
+- Angular and README are not implemented.
