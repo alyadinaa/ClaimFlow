@@ -723,3 +723,62 @@ T4, T5 and T8 therefore reference a request; other history entries do not.
 ### Current implementation boundary
 
 No entities, entity configurations, migrations or database file exist yet.
+
+---
+
+## Entry 7: Domain entities and claim lifecycle (Phase 6A and 6B)
+
+- **Date:** 2026-11-25
+- **Task:** Implement the approved entities, EF Core configurations and T1–T8 lifecycle
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Request and process
+
+The developer asked for an implementation plan first. The AI proposed three steps: 6A (entities and configurations), 6B (lifecycle, market lookup, unit tests) and 6C (first migration and database constraint tests). The developer approved the plan, including the seven `ClaimAction` values and `Version` starting at 1, and then approved 6A and 6B separately. For 6B the developer stated that approximately one hour remained and prioritised "a correct, testable claim lifecycle over additional features."
+
+### Phase 6A: completed work
+
+- Created four entities, six enums and four EF Core configuration classes.
+- Added four `DbSet`s, enum-to-text conversion and a UTC marker on reading timestamps.
+- Configured `Version` as a concurrency token and Restrict delete behaviour for all relationships.
+- Gave the two `InformationRequest.ClaimId` indexes distinct names, because unnamed indexes on the same column overwrite each other in EF Core.
+
+**Verification:** build with 0 warnings and 0 errors. The generated SQL contained four tables, ten check constraints, seven Restrict foreign keys and the approved indexes, including the filtered unique index for one open request. The API started and `/openapi/v1.json` returned HTTP 200. No database or migration was created.
+
+**Failed command:** the AI's first attempt to create the files in one shell command failed with a quoting error. It confirmed that nothing had been created, then wrote the files individually.
+
+### Phase 6B: completed work
+
+- Implemented T1–T8 as methods on `Claim`, with role, ownership, assigned-officer, version, status and input checks.
+- Each action uses a server UTC time and adds one history row. T2–T8 also increment `Version`.
+- T4, T5 and T8 history rows reference their information request; T8 closes it.
+- Implemented the six-market lookup for currency, decimal places and time zone (developer assumptions).
+- Added `ClaimRuleException`, with error types intended to map to 400, 403, 404 and 409.
+
+**Verification:** build with 0 warnings and 0 errors; **48 tests passed, 0 failed**. The EF model remained valid. No packages were added.
+
+### Error precedence decision
+
+The approved design did not say which error applies when several do. The AI recommended an order, and the developer approved it.
+
+- **Developer decision, approved after AI recommendation:** Permission → Version → Status → Input validation.
+- **Reason:** avoid disclosing claim state to users who do not have permission.
+- **Example:** an officer acting on another officer's settled claim gets 403, not 409.
+
+The assessment does not prescribe this.
+
+### Developer decision
+
+**Developer decision: Phase 6A plan approved before execution; Phase 6B review approved**
+
+- **Accepted:** The 6A/6B/6C split, files and namespaces, enum values, navigations, constraints, and the error precedence order.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Not yet verified or implemented
+
+- Database persistence, transaction behaviour and simultaneous database updates remain unverified. The 48 tests exercise the domain rules and market lookup in memory only.
+- The database constraints are defined but have not been tested against a real database.
+- No service or HTTP endpoints exist yet.
+- No authentication, Kafka or frontend exists yet.
+- User fields are not validated beyond storing email in lowercase.
