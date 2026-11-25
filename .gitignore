@@ -36,6 +36,7 @@ secrets.json
 
 # Local databases
 *.db
+*.db-journal
 *.db-shm
 *.db-wal
 *.sqlite
