@@ -23,6 +23,13 @@ export interface SubmitClaimRequest {
   claimedAmountMinor: number;
 }
 
+// The API answers the claim's one open request, so no request id is sent.
+// The version makes sure it is still the question the claimant saw.
+export interface ProvideInformationRequest {
+  expectedVersion: number;
+  response: string;
+}
+
 export interface InformationRequest {
   id: number;
   question: string;

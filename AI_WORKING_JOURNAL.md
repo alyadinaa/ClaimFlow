@@ -1234,3 +1234,65 @@ The developer asked for a claimant to view their own claims, submit Motor and Pr
 - No automatic refresh or paging.
 - Timestamps are shown in the viewer's time zone.
 - The 403 message has not been tested through the browser interface.
+
+---
+
+## Entry 15: Claimant information responses (Phase 10C)
+
+- **Date:** 2026-11-25
+- **Task:** Let a claimant answer an officer's information request in the UI
+- **AI tool:** Claude Code (Claude Opus 5.5)
+
+### Purpose and process
+
+This phase addresses the incomplete requirement recorded in Entry 14. The developer required the actual backend contract to be reported before coding, no automatic retry after an uncertain failure, and no backend changes.
+
+### Assessment requirements and developer decisions
+
+- **Assessment (p.2):** claimants provide additional information when asked. With Entry 14, the UI now covers all four claimant activities named in the brief.
+- **Developer decisions and AI implementation choices:** the form design and the handling of conflicts and uncertain results.
+
+### API contract
+
+- `POST /api/claims/{id}/information` with `{ expectedVersion, response }`; returns 200 with the updated claim.
+- No request ID is sent. The API answers the claim's single open request. `expectedVersion` is the `version` last loaded, and ensures it is still the question the claimant saw.
+- Several rounds are possible, one open at a time. The answer must not be blank and is limited to 2,000 characters.
+- Success changes the request to Answered and the claim to InReview. It is not a decision.
+
+### Implementation
+
+- Requests are shown oldest first, labelled in text as waiting, answered or closed. Only the open one has a form.
+- The form has a label, explanation, character count, validation and focus on error, and accepts one submission at a time.
+- After success the page shows a message and the saved answer, then reloads the claim and history.
+- An answer is never carried over to a different question.
+
+| Problem | Behaviour |
+|---|---|
+| 400, 403 | Message shown; answer kept |
+| 401 | Login page with a message |
+| 404 | Claim not found |
+| 409 | Claim reloaded; explains whether the request is open, answered or closed |
+| No reply or 5xx | Treated as uncertain, because the API saves before it builds its reply. The claim is checked and the answer is never resent automatically |
+| The check also fails | Sending stays locked, the answer is kept and "Check again" is offered |
+
+### Tests and verification
+
+- Angular production build: no errors.
+- **81 frontend unit tests passed** (23 new). **129 backend tests passed**; the backend is unchanged. No package was added.
+- **Browser check: 21 of 21 passed** in headless Chrome with the real API and a temporary database, with no uncaught errors. It is a temporary script and is not in the repository.
+- It covered the full flow, a second round, phone width, three rapid submits saving one answer, a closed request (409), the connection cut before the server received an answer and after it had saved one (saved exactly once), the API stopped, no assessment or officer name on the page, and a real 403. The last point closes the browser-level 403 gap in Entries 12 and 14.
+- The Phase 10B browser script was not rerun.
+
+### Decisions
+
+- **Accepted:** The developer accepted Phase 10C for finalisation and commit, subject to a clean review.
+- **Challenged:** None.
+- **Overridden:** None.
+
+### Known limitations
+
+- Unsent text is lost if the claimant leaves the page or the session ends.
+- No automatic refresh; a new question appears after reloading.
+- Text only, and an answer cannot be edited after sending.
+- If a first attempt is still travelling when the check reports "not saved", both could be sent. The version check lets only one be saved.
+- A 403 on page load shows both a banner and a page error.

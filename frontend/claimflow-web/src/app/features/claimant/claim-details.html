@@ -34,6 +34,40 @@
       <p class="alert"><strong>Your claim was rejected.</strong> Reason: {{ claim.rejectionReason }}</p>
     }
 
+    @if (message(); as text) {
+      <p class="success" role="status">{{ text }}</p>
+    }
+    @if (warning(); as text) {
+      <p class="alert" role="alert">{{ text }}</p>
+    }
+
+    @if (claim.informationRequests.length > 0) {
+      <section class="card requests">
+        <h2>Information requests</h2>
+        @for (request of claim.informationRequests; track request.id) {
+          <article [class.open]="request.status === 'Open'">
+            <p class="request-status">{{ requestStatuses[request.status] }}</p>
+            <p class="text"><strong>{{ request.question }}</strong></p>
+            <p class="muted">Asked by a claims officer, {{ request.requestedAtUtc | date: 'd MMM y, HH:mm' }}</p>
+            @if (request.response) {
+              <p class="text">Your answer: {{ request.response }}</p>
+            }
+            @if (request.respondedAtUtc) {
+              <p class="muted">Answered {{ request.respondedAtUtc | date: 'd MMM y, HH:mm' }}</p>
+            }
+            @if (request.status === 'Open') {
+              <app-information-response-form
+                [sending]="sending()"
+                [locked]="uncertain()"
+                [errors]="responseErrors()"
+                (send)="sendAnswer(request, $event)"
+                (checkAgain)="checkAnswer(request)"
+              />
+            }
+          </article>
+        }
+      </section>
+    }
     <div class="columns">
       <section class="card">
         <h2>Claim information</h2>
@@ -86,23 +120,6 @@
         </ol>
       </section>
     </div>
-
-    @if (claim.informationRequests.length > 0) {
-      <section class="card requests">
-        <h2>Information requests</h2>
-        @for (request of claim.informationRequests; track request.id) {
-          <article>
-            <p class="text"><strong>{{ request.question }}</strong></p>
-            <p class="muted">
-              {{ requestStatuses[request.status] }}, asked {{ request.requestedAtUtc | date: 'd MMM y, HH:mm' }}
-            </p>
-            @if (request.response) {
-              <p class="text">Your answer: {{ request.response }}</p>
-            }
-          </article>
-        }
-      </section>
-    }
   } @else {
     <p class="card" role="status">Loading your claim…</p>
   }

@@ -1,0 +1,41 @@
+<form (submit)="submit($event)" novalidate>
+  @if (errors().length > 0) {
+    <div class="alert" role="alert">
+      @for (message of errors(); track message) {
+        <p>{{ message }}</p>
+      }
+      @if (locked()) {
+        <button type="button" class="button secondary" (click)="checkAgain.emit()">Check again</button>
+      }
+    </div>
+  }
+
+  <!-- Reading value() keeps these checks up to date as the claimant types. -->
+  @let count = value().length;
+  @let blank = submitted() && answer.hasError('required');
+  @let tooLong = count > maxLength;
+
+  <label for="response">Your answer</label>
+  <p class="hint" id="response-hint">
+    Please provide the information requested above. You can send one answer, and it cannot be changed afterwards.
+  </p>
+  <textarea
+    #box
+    id="response"
+    rows="5"
+    [formControl]="answer"
+    [readOnly]="sending()"
+    [attr.aria-invalid]="blank || tooLong"
+    [attr.aria-describedby]="blank || tooLong ? 'response-error response-count' : 'response-hint response-count'"
+  ></textarea>
+  <p class="hint count" id="response-count">{{ count }} of {{ maxLength }} characters</p>
+  @if (blank) {
+    <p class="field-error" id="response-error">Enter your answer.</p>
+  } @else if (tooLong) {
+    <p class="field-error" id="response-error">Use no more than {{ maxLength }} characters.</p>
+  }
+
+  <button type="submit" class="button" [disabled]="sending() || locked()">
+    {{ sending() ? 'Sending…' : 'Send answer' }}
+  </button>
+</form>

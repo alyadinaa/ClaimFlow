@@ -59,7 +59,24 @@ li:last-child {
 }
 
 .requests {
-  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.request-status {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+article.open {
+  padding: 1rem;
+  background: #fffaf0;
+  border: 1px solid #f0c674;
+  border-radius: var(--radius);
+}
+
+.open .request-status {
+  color: #7a4a00;
 }
 
 article + article {

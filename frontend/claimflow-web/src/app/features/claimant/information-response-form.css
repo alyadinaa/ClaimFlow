@@ -1,0 +1,46 @@
+form {
+  margin-top: 1rem;
+}
+
+label {
+  font-weight: 600;
+}
+
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #8794a6;
+  border-radius: var(--radius);
+  font: inherit;
+}
+
+textarea[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.hint,
+.field-error {
+  margin: 0.2rem 0 0.4rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.count {
+  text-align: right;
+}
+
+.field-error {
+  color: var(--danger);
+}
+
+.alert {
+  margin-bottom: 1rem;
+}
+
+.alert p {
+  margin: 0 0 0.5rem;
+}
+
+.alert p:last-child {
+  margin: 0;
+}
